@@ -1,6 +1,6 @@
-from pathlib import Path
 import sys
 import unittest
+from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
@@ -38,7 +38,13 @@ class DemoTests(unittest.TestCase):
             def __init__(self) -> None:
                 self.calls = []
 
-            def ensure_repo_mounted(self, repo_id: str, mount_path: str, revision: str, hf_token: str | None = None) -> dict:
+            def ensure_repo_mounted(
+                self,
+                repo_id: str,
+                mount_path: str,
+                revision: str,
+                hf_token: str | None = None,
+            ) -> dict:
                 self.calls.append(
                     {
                         "repo_id": repo_id,

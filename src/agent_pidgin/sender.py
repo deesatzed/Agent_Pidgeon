@@ -37,9 +37,7 @@ class PidginStdioSender:
             handshake = self._normalize_tool_result(
                 await client.call_tool("handshake_pidgin_session", {"payload": handshake_payload})
             )
-            result = self._normalize_tool_result(
-                await client.call_tool("resolve_pidgin_message", {"payload": payload})
-            )
+            result = self._normalize_tool_result(await client.call_tool("resolve_pidgin_message", {"payload": payload}))
         return {
             "handshake": handshake,
             "result": result,

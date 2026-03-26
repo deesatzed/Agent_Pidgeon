@@ -6,12 +6,31 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "fastmcp>=2.0.0",
+    "ruff>=0.3.0",
 ]
 
 [project.scripts]
 agent-pidgin-demo = "agent_pidgin.cli:main"
 agent-pidgin-stdio-demo = "agent_pidgin.stdio_cli:main"
 agent-pidgin-receiver = "agent_pidgin.receiver_cli:main"
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "C90", # mccabe
+    "B",   # flake8-bugbear
+]
+ignore = []
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
 
 [build-system]
 requires = ["setuptools>=68", "wheel"]

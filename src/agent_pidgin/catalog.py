@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-
 _DEFAULT_CONCEPTS = {
     "str.trim": {
         "pointer": "str.trim",

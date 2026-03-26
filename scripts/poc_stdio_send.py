@@ -5,7 +5,6 @@ import json
 
 from agent_pidgin.demo import build_demo_message, run_stdio_demo
 
-
 if __name__ == "__main__":
     payload = build_demo_message()
     result = asyncio.run(run_stdio_demo(payload=payload))

@@ -1,7 +1,7 @@
-from pathlib import Path
 import asyncio
 import sys
 import unittest
+from pathlib import Path
 from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -53,10 +53,12 @@ class SenderTests(unittest.TestCase):
         class FakeClientWithStructuredResults(FakeClient):
             async def call_tool(self, name, arguments=None, **kwargs):
                 self.calls.append((name, arguments or {}))
-                return SimpleNamespace(data={
-                    "message_id": arguments["payload"]["message_id"],
-                    "status": "ready" if name == "handshake_pidgin_session" else "resolved",
-                })
+                return SimpleNamespace(
+                    data={
+                        "message_id": arguments["payload"]["message_id"],
+                        "status": "ready" if name == "handshake_pidgin_session" else "resolved",
+                    }
+                )
 
         fake_client = FakeClientWithStructuredResults()
         sender = PidginStdioSender(client_factory=lambda: fake_client)

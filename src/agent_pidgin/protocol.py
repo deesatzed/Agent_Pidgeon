@@ -1,7 +1,32 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import Any
+
+# Hugging Face repo IDs are typically namespace/repo-name or just repo-name.
+# Safe characters: alphanumeric, dots, dashes, underscores, and forward slashes.
+REPO_ID_PATTERN = re.compile(r"^[a-zA-Z0-9._-]+(/[a-zA-Z0-9._-]+)?$")
+# Revisions are branch names, tags, or commit hashes.
+REVISION_PATTERN = re.compile(r"^[a-zA-Z0-9._-]+$")
+
+
+def validate_repo_id(repo_id: str | None, field_name: str = "repo_id") -> None:
+    if repo_id is None:
+        return
+    if not REPO_ID_PATTERN.match(repo_id):
+        raise ValueError(
+            f"Invalid {field_name} format: '{repo_id}'. Must be 'namespace/name' or 'name' using safe characters."
+        )
+
+
+def validate_revision(revision: str | None, field_name: str = "revision") -> None:
+    if revision is None:
+        return
+    if not REVISION_PATTERN.match(revision):
+        raise ValueError(
+            f"Invalid {field_name} format: '{revision}'. Must be a branch, tag, or commit hash using safe characters."
+        )
 
 
 @dataclass(frozen=True)
@@ -9,6 +34,10 @@ class PidginArtifactTarget:
     kind: str | None
     repo: str
     revision: str
+
+    def __post_init__(self) -> None:
+        validate_repo_id(self.repo, "artifact repo")
+        validate_revision(self.revision, "artifact revision")
 
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> "PidginArtifactTarget":
@@ -60,6 +89,10 @@ class PidginMessage:
     artifact: PidginArtifactTarget | None
     steps: list[str]
     created_at: str
+
+    def __post_init__(self) -> None:
+        validate_repo_id(self.dataset_repo, "dataset_repo")
+        validate_revision(self.dataset_revision, "dataset_revision")
 
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> "PidginMessage":

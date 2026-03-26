@@ -1,6 +1,6 @@
-from pathlib import Path
 import sys
 import unittest
+from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
@@ -80,6 +80,54 @@ class ProtocolTests(unittest.TestCase):
         }
 
         with self.assertRaises(ValueError):
+            PidginMessage.from_dict(payload)
+
+    def test_pidgin_message_validates_dataset_repo_format(self) -> None:
+        payload = {
+            "message_id": "msg-004",
+            "sender_id": "agent-a",
+            "receiver_id": "agent-b",
+            "target_language": "python",
+            "dataset_repo": "waynesatz/agent;rm -rf /",
+            "dataset_revision": "main",
+            "steps": ["str.trim"],
+            "created_at": "2026-03-25T10:30:00Z",
+        }
+
+        with self.assertRaisesRegex(ValueError, "Invalid dataset_repo format"):
+            PidginMessage.from_dict(payload)
+
+    def test_pidgin_message_validates_dataset_revision_format(self) -> None:
+        payload = {
+            "message_id": "msg-005",
+            "sender_id": "agent-a",
+            "receiver_id": "agent-b",
+            "target_language": "python",
+            "dataset_repo": "waynesatz/agent-pidgin-data",
+            "dataset_revision": "main; drop table",
+            "steps": ["str.trim"],
+            "created_at": "2026-03-25T10:30:00Z",
+        }
+
+        with self.assertRaisesRegex(ValueError, "Invalid dataset_revision format"):
+            PidginMessage.from_dict(payload)
+
+    def test_pidgin_message_validates_artifact_repo_format(self) -> None:
+        payload = {
+            "message_id": "msg-006",
+            "sender_id": "agent-a",
+            "receiver_id": "agent-b",
+            "target_language": "python",
+            "artifact": {
+                "kind": "repo",
+                "repo": "invalid repo name",
+                "revision": "main",
+            },
+            "steps": ["str.trim"],
+            "created_at": "2026-03-25T10:30:00Z",
+        }
+
+        with self.assertRaisesRegex(ValueError, "Invalid artifact repo format"):
             PidginMessage.from_dict(payload)
 
 

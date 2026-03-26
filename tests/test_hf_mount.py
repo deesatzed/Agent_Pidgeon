@@ -1,7 +1,7 @@
-from pathlib import Path
-from tempfile import TemporaryDirectory
 import sys
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -84,7 +84,10 @@ class HfMountTests(unittest.TestCase):
             return SimpleNamespace(
                 returncode=1,
                 stdout="",
-                stderr='Error: daemon already running (pid=123) for "/tmp/agent-pidgin-data". Stop it first with: hf-mount stop /tmp/agent-pidgin-data',
+                stderr=(
+                    'Error: daemon already running (pid=123) for "/tmp/agent-pidgin-data". '
+                    "Stop it first with: hf-mount stop /tmp/agent-pidgin-data"
+                ),
             )
 
         manager = HfMountManager(
