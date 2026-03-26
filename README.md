@@ -16,6 +16,20 @@ A small proof of concept for A2A pidgin communication using `hf-mount` and an MC
 - `str.lowercase`
 - `str.ascii_only`
 
+## Logging & Observability
+
+The project now includes structured logging and telemetry:
+- **Enable Debug Logs:** Set `VERBOSE=1` in your environment or use the `--verbose` flag with CLI commands to see detailed debug output on `stderr`.
+- **Telemetry:** Each resolution request now logs its duration in milliseconds (`duration_ms`), allowing for performance monitoring.
+- **Safety:** All sensitive fields (like `HF_TOKEN`) are sanitized and never appear in the logs.
+
+## HF Token Management
+
+For maximum security, the project supports three ways to handle Hugging Face tokens:
+1. **Environment Variable:** Set `HF_TOKEN` in your `.env` file for automated environments.
+2. **System Login:** If `HF_TOKEN` is not set, `hf-mount` will automatically attempt to use the token stored by `huggingface-cli login`.
+3. **Implicit:** For public repositories, no token is required.
+
 ## Run tests
 
 ```bash
