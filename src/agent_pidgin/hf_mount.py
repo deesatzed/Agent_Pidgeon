@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import logging
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
+
+logger = logging.getLogger(__name__)
 
 Runner = Callable[..., object]
 
@@ -43,17 +46,46 @@ class HfMountManager:
             revision=revision,
             hf_token=hf_token,
         )
+
+        logger.info(
+            "Attempting to mount HF repo",
+            extra={
+                "repo_id": repo_id,
+                "mount_path": mount_path,
+                "revision": revision,
+                "has_token": hf_token is not None,
+            },
+        )
+
         result = self.runner(command, capture_output=True, text=True, timeout=30)
         if getattr(result, "returncode", 1) != 0:
             error_text = getattr(result, "stderr", "hf-mount failed") or "hf-mount failed"
             if "daemon already running" in error_text:
+                logger.debug(
+                    "HF repo already mounted",
+                    extra={"repo_id": repo_id, "mount_path": mount_path},
+                )
                 return {
                     "repo_id": repo_id,
                     "mount_path": mount_path,
                     "revision": revision,
                     "status": "already-mounted",
                 }
+
+            logger.error(
+                "Failed to mount HF repo",
+                extra={
+                    "repo_id": repo_id,
+                    "error": error_text,
+                    "returncode": getattr(result, "returncode", 1),
+                },
+            )
             raise RuntimeError(error_text)
+
+        logger.info(
+            "HF repo mounted successfully",
+            extra={"repo_id": repo_id, "mount_path": mount_path},
+        )
         return {
             "repo_id": repo_id,
             "mount_path": mount_path,
@@ -62,8 +94,14 @@ class HfMountManager:
         }
 
     def stop_repo_mount(self, mount_path: str) -> None:
+        logger.info("Attempting to stop HF repo mount", extra={"mount_path": mount_path})
         command = self.build_stop_command(mount_path)
         result = self.runner(command, capture_output=True, text=True, timeout=30)
         if getattr(result, "returncode", 1) != 0:
             error_text = getattr(result, "stderr", "hf-mount stop failed") or "hf-mount stop failed"
+            logger.error(
+                "Failed to stop HF repo mount",
+                extra={"mount_path": mount_path, "error": error_text},
+            )
             raise RuntimeError(error_text)
+        logger.info("HF repo mount stopped successfully", extra={"mount_path": mount_path})
