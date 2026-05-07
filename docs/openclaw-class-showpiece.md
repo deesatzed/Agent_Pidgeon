@@ -28,7 +28,7 @@ PYTHONPATH=src python3 scripts/check_openclaw_showpiece.py
 
 The check compares stable behavior: event sequence, decisions, summary counts, receipt counts, and required report phrases. It does not compare timestamps or hash-chain values byte for byte.
 
-The static HTML replay is dependency-free and expands the trace into reviewer-oriented sections for hash-chain integrity, grouped policy findings, per-event receipt IDs, and semantic diff before/after panels when the trace contains before/after payload data.
+The static HTML replay is dependency-free and expands the trace into reviewer-oriented sections for hash-chain integrity, grouped policy findings, full per-event receipt details, memory before/after panels, and previous/proposed contract panels for semantic drift.
 
 Committed golden artifacts live in:
 
@@ -195,14 +195,14 @@ The trace should include hashes so the replay can also report whether the event 
 
 The HTML viewer is a local report generated from the same trace JSON. It is for operator review, demos, and bug reports; it is not a separate source of truth.
 
-The first viewer should be static HTML with no backend dependency. It should render:
+The viewer is static HTML with no backend dependency. It renders:
 
 - trace ID, agent ID, channel, status, trace hash, and integrity result
 - a vertical timeline of goal, skill, memory, and tool events
 - blocked events highlighted with policy codes and short explanations
-- semantic diff panels for memory drift and tool contract drift
+- semantic diff panels for memory drift and tool contract drift, including before/after or previous/proposed payloads where available
 - skill permission diff with dangerous permissions grouped by category
-- receipts and catalog pointers for resolved safe steps
+- full receipts and catalog pointers for resolved safe steps
 - raw JSON disclosure panels for reproducibility
 
 The key first-viewport state should say:

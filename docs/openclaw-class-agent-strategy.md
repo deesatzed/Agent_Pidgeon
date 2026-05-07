@@ -336,6 +336,7 @@ Implemented in the sidecar pass:
 - `record_skill_install` in `flight_recorder.py`.
 - Local HTML replay reports through `render-trace --html-out` and the runnable showpiece script.
 - OTLP-style JSON export through `render-trace --otel-out`, with Pidgeon trace JSON remaining the authority.
+- HTML replay includes trace integrity, grouped findings, full receipt drilldown, memory before/after panels, and previous/proposed contract panels for drift events.
 - Skill trust-root checks through `verify-skill --trust-root`, including trusted publishers, trusted keys, and revoked keys.
 - Offline OpenClaw Gateway adapter example in `examples/openclaw_gateway_adapter/`.
 - Deployment guidance in [openclaw-sidecar-deployment.md](openclaw-sidecar-deployment.md).
@@ -350,11 +351,9 @@ Implemented in the sidecar pass:
 ## Next Implementation Steps
 
 1. Add an OpenClaw Gateway adapter example that calls Pidgeon before skill install, memory write, tool call, and shell execution.
-1. Expand the HTML replay with integrity status, finding groups, receipts drilldown, and before/after diff panels.
-2. Add public-key catalog signatures and key rotation on top of the current HMAC catalog trust checks.
-3. Prototype a Rust or Zig verifier/proxy for fast trace validation and low-latency sidecar deployment.
-4. Add a real HTTP or stdio sidecar server endpoint for the gateway adapter.
-5. Add packaged install instructions for local desktop agents and enterprise support bots.
+1. Add public-key catalog signatures and key rotation on top of the current HMAC catalog trust checks.
+2. Prototype a Rust or Zig verifier/proxy for fast trace validation and low-latency sidecar deployment.
+3. Add packaged install instructions for local desktop agents and enterprise support bots.
 
 ## Boundary
 

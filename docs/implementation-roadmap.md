@@ -37,6 +37,8 @@ Done:
 - reproducible showpiece demo covering authoring, validation, policy, resolution, receipts, and unsafe-change review
 - Autonomous Agent Flight Recorder trace schema, recorder module, replay report, and corrupted-context demo
 - hash-chained AAFR traces with trace-integrity validation
+- AAFR trace events with full deterministic receipts for resolved contract events
+- HTML replay with integrity status, grouped findings, receipt drilldown, and before/after diff panels
 - deterministic detection of unapproved memory guardrail weakening
 - high-risk semantic drift blocking for proposed contract events
 - docs explaining why Pidgin is not telemetry and not just another auditor agent
@@ -54,7 +56,6 @@ Done:
 
 2. **AAFR next hardening**
    - Add stable trace fixtures for the flight recorder demo.
-   - Add a richer HTML timeline view beside the terminal report.
    - Add event types for tool result observation and approved memory writes.
    - Add optional trace export compatible with OpenTelemetry-style spans.
    - Add signed trace roots or external append-only storage integration.

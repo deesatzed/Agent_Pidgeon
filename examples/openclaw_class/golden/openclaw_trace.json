@@ -2,14 +2,14 @@
   "pidgin_version": "0.1",
   "trace_id": "trace-openclaw-sidecar-001",
   "status": "blocked",
-  "generated_at": "2026-05-07T14:31:29.542246+00:00",
+  "generated_at": "2026-05-07T16:31:50.549456+00:00",
   "events": [
     {
       "event_id": "evt-0001",
       "parent_event_id": null,
       "event_type": "agent.goal.received",
       "actor": "openclaw-gateway",
-      "timestamp": "2026-05-07T14:31:29.540836+00:00",
+      "timestamp": "2026-05-07T16:31:50.548043+00:00",
       "summary": "Handle a support escalation through Slack without unsafe external actions.",
       "decision": "observed",
       "payload": {
@@ -20,14 +20,14 @@
       "policy_findings": [],
       "receipt_ids": [],
       "previous_event_hash": null,
-      "event_hash": "f9c29a6ecd7b4305a34ef4f21f50cbb6928c666c6d1ecc94aab5288a8333a0aa"
+      "event_hash": "ddcfc4fbb8458a5b06e60e15f808efd84c7e15d1c8aaa9adc4334e26f48b5c80"
     },
     {
       "event_id": "evt-0002",
       "parent_event_id": "evt-0001",
       "event_type": "agent.skill.proposed_install",
       "actor": "openclaw-gateway",
-      "timestamp": "2026-05-07T14:31:29.541128+00:00",
+      "timestamp": "2026-05-07T16:31:50.548419+00:00",
       "summary": "Preflight unsigned community skill before install.",
       "decision": "blocked",
       "payload": {
@@ -65,15 +65,15 @@
         }
       ],
       "receipt_ids": [],
-      "previous_event_hash": "f9c29a6ecd7b4305a34ef4f21f50cbb6928c666c6d1ecc94aab5288a8333a0aa",
-      "event_hash": "66825a92d409e34d05bbb8afbe5d65acfca0a63b79414fd527d82639ede3feea"
+      "previous_event_hash": "ddcfc4fbb8458a5b06e60e15f808efd84c7e15d1c8aaa9adc4334e26f48b5c80",
+      "event_hash": "9ec0ccf19f54f024f55bc5d6859f86a1731ae96f7d401d3f7b1dd029284776c2"
     },
     {
       "event_id": "evt-0003",
       "parent_event_id": "evt-0002",
       "event_type": "agent.memory.proposed_update",
       "actor": "openclaw-personal-agent",
-      "timestamp": "2026-05-07T14:31:29.541156+00:00",
+      "timestamp": "2026-05-07T16:31:50.548449+00:00",
       "summary": "Preflight proposed memory update from personal-channel context.",
       "decision": "blocked",
       "payload": {
@@ -141,15 +141,15 @@
         ],
         "contract_changes": []
       },
-      "previous_event_hash": "66825a92d409e34d05bbb8afbe5d65acfca0a63b79414fd527d82639ede3feea",
-      "event_hash": "74ed03f24cca9b5bd013efb16d81d7928d96968dfaf28ee3c1e0cddb1752034f"
+      "previous_event_hash": "9ec0ccf19f54f024f55bc5d6859f86a1731ae96f7d401d3f7b1dd029284776c2",
+      "event_hash": "5614bb53683c9331dd54c7e841f229bcc067d759952c74da9f6d1754ba8d779e"
     },
     {
       "event_id": "evt-0004",
       "parent_event_id": "evt-0003",
       "event_type": "agent.tool.proposed_call",
       "actor": "openclaw-support-agent",
-      "timestamp": "2026-05-07T14:31:29.541577+00:00",
+      "timestamp": "2026-05-07T16:31:50.548823+00:00",
       "summary": "Preflight safe external email draft with approval and receipt guardrails.",
       "decision": "resolved",
       "payload": {
@@ -194,21 +194,98 @@
       ],
       "resolution_status": "resolved",
       "receipt_ids": [
-        "receipt-965cd002-2845-4cee-9eb7-37f42cc930b9",
-        "receipt-572ab2db-912a-47e1-a49c-2734624ee372",
-        "receipt-580ef601-4425-4dda-8474-75611c3a2cc7",
-        "receipt-7e756ef2-a321-46c1-94f1-90775d7307ee",
-        "receipt-89fa7499-a59d-4cef-8e7a-2f72f33cff64"
+        "receipt-8abe7c74-d94a-457c-bfc7-711eb4c3eff3",
+        "receipt-e9573bc2-2fc1-4c8a-b0e1-d17a5057db51",
+        "receipt-5046772a-e5ae-4663-b702-68654f88de57",
+        "receipt-ed22f9a2-31bd-4cb0-894c-1e452c888209",
+        "receipt-c9317151-775a-4e4e-9843-069a7b5c3216"
       ],
-      "previous_event_hash": "74ed03f24cca9b5bd013efb16d81d7928d96968dfaf28ee3c1e0cddb1752034f",
-      "event_hash": "c7673b3550b4684b61f8501c5e11abe77c3028c968c06e69cc0405c20534d9e4"
+      "receipts": [
+        {
+          "pointer": "comm.draft_external_message",
+          "type_signature": "message_request -> draft_message",
+          "target_language": "python",
+          "implementation": "lambda request: {'status': 'drafted', 'external_send': False, 'request': request}",
+          "implementation_hash": "e1041d28fb06577c972fdffbbdba08bddf1a4de6a0aeac0ab89ba86b31bd1cc5",
+          "catalog_hash": "effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107",
+          "catalog_id": "communications",
+          "catalog_version": "0.1.0",
+          "artifact_repo": "waynesatz/agent-pidgin-data",
+          "artifact_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "resolver_version": "0.1.0",
+          "resolved_at": "2026-05-07T16:31:50.548776+00:00",
+          "receipt_id": "receipt-8abe7c74-d94a-457c-bfc7-711eb4c3eff3"
+        },
+        {
+          "pointer": "comm.require_recipient_verification",
+          "type_signature": "message_request -> verification_request",
+          "target_language": "python",
+          "implementation": "lambda request: {'recipient_verification_required': True, 'request': request}",
+          "implementation_hash": "97760db44ef28f13de87b92aa5d0d9c1a7878aed64cf73651f868efd5f89340a",
+          "catalog_hash": "effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107",
+          "catalog_id": "communications",
+          "catalog_version": "0.1.0",
+          "artifact_repo": "waynesatz/agent-pidgin-data",
+          "artifact_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "resolver_version": "0.1.0",
+          "resolved_at": "2026-05-07T16:31:50.548796+00:00",
+          "receipt_id": "receipt-e9573bc2-2fc1-4c8a-b0e1-d17a5057db51"
+        },
+        {
+          "pointer": "comm.require_human_approval",
+          "type_signature": "message_request -> approval_request",
+          "target_language": "python",
+          "implementation": "lambda request: {'requires_human_approval': True, 'payload': request}",
+          "implementation_hash": "ecbcf6bcdcedea52737028670a473f431dc9e262a254ec74262781d93c90361e",
+          "catalog_hash": "effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107",
+          "catalog_id": "communications",
+          "catalog_version": "0.1.0",
+          "artifact_repo": "waynesatz/agent-pidgin-data",
+          "artifact_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "resolver_version": "0.1.0",
+          "resolved_at": "2026-05-07T16:31:50.548804+00:00",
+          "receipt_id": "receipt-5046772a-e5ae-4663-b702-68654f88de57"
+        },
+        {
+          "pointer": "comm.send_external_message",
+          "type_signature": "approved_message -> send_request",
+          "target_language": "python",
+          "implementation": "lambda message: {'action': 'send_external_message', 'requires_approval': True, 'message': message}",
+          "implementation_hash": "b07196f97541fbee4fcd9d90ab9a29fe043c284d22cbbba1fca9f3ad617a8140",
+          "catalog_hash": "effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107",
+          "catalog_id": "communications",
+          "catalog_version": "0.1.0",
+          "artifact_repo": "waynesatz/agent-pidgin-data",
+          "artifact_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "resolver_version": "0.1.0",
+          "resolved_at": "2026-05-07T16:31:50.548809+00:00",
+          "receipt_id": "receipt-ed22f9a2-31bd-4cb0-894c-1e452c888209"
+        },
+        {
+          "pointer": "agent.attach_receipts",
+          "type_signature": "resolution -> resolution",
+          "target_language": "python",
+          "implementation": "lambda resolution: resolution",
+          "implementation_hash": "49c937fbcd74790627a9979d746019f2e22c5f44ee1c8e79bd1882920b2c89b7",
+          "catalog_hash": "effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107",
+          "catalog_id": "agent_ops",
+          "catalog_version": "0.1.0",
+          "artifact_repo": "waynesatz/agent-pidgin-data",
+          "artifact_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "resolver_version": "0.1.0",
+          "resolved_at": "2026-05-07T16:31:50.548814+00:00",
+          "receipt_id": "receipt-c9317151-775a-4e4e-9843-069a7b5c3216"
+        }
+      ],
+      "previous_event_hash": "5614bb53683c9331dd54c7e841f229bcc067d759952c74da9f6d1754ba8d779e",
+      "event_hash": "84ce2969308fcaec02fe85acc16c02aeea79a2c2309a5d39b5f37374d5ae4aa2"
     },
     {
       "event_id": "evt-0005",
       "parent_event_id": "evt-0004",
       "event_type": "agent.tool.proposed_call",
       "actor": "openclaw-support-agent",
-      "timestamp": "2026-05-07T14:31:29.541901+00:00",
+      "timestamp": "2026-05-07T16:31:50.549127+00:00",
       "summary": "Preflight drifted email send after guardrails disappear.",
       "decision": "blocked",
       "payload": {
@@ -249,7 +326,24 @@
       ],
       "resolution_status": "resolved",
       "receipt_ids": [
-        "receipt-06a66e09-efb4-40d7-b2c3-354842fa123c"
+        "receipt-a5123728-5fb3-4064-be9f-62ecb626d1dc"
+      ],
+      "receipts": [
+        {
+          "pointer": "comm.send_external_message",
+          "type_signature": "approved_message -> send_request",
+          "target_language": "python",
+          "implementation": "lambda message: {'action': 'send_external_message', 'requires_approval': True, 'message': message}",
+          "implementation_hash": "b07196f97541fbee4fcd9d90ab9a29fe043c284d22cbbba1fca9f3ad617a8140",
+          "catalog_hash": "effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107",
+          "catalog_id": "communications",
+          "catalog_version": "0.1.0",
+          "artifact_repo": "waynesatz/agent-pidgin-data",
+          "artifact_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "resolver_version": "0.1.0",
+          "resolved_at": "2026-05-07T16:31:50.549107+00:00",
+          "receipt_id": "receipt-a5123728-5fb3-4064-be9f-62ecb626d1dc"
+        }
       ],
       "semantic_diff": {
         "added": [],
@@ -266,15 +360,42 @@
         ],
         "contract_changes": []
       },
-      "previous_event_hash": "c7673b3550b4684b61f8501c5e11abe77c3028c968c06e69cc0405c20534d9e4",
-      "event_hash": "08541dc66e02db14d2120cf7d90b28bdf5d24e37d9457e67c6a076cb6a73bb8e"
+      "previous_contract_hash": "0ea486f6e6053cf3287090d1471949eac63d3bb077cd8fa915b60a1709bb85fd",
+      "previous_contract": {
+        "pidgin_version": "0.1",
+        "message_type": "resolve",
+        "message_id": "openclaw-email-001",
+        "sender_id": "openclaw-support-agent",
+        "receiver_id": "agent-pidgeon",
+        "target_language": "python",
+        "artifact": {
+          "kind": "repo",
+          "repo": "waynesatz/agent-pidgin-data",
+          "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "steps": [
+          "comm.draft_external_message",
+          "comm.require_recipient_verification",
+          "comm.require_human_approval",
+          "comm.send_external_message",
+          "agent.attach_receipts"
+        ],
+        "created_at": "2026-05-07T12:00:00Z",
+        "metadata": {
+          "source": "openclaw_class_preflight",
+          "channel": "slack:support-escalations",
+          "tool_name": "email.send_customer"
+        }
+      },
+      "previous_event_hash": "84ce2969308fcaec02fe85acc16c02aeea79a2c2309a5d39b5f37374d5ae4aa2",
+      "event_hash": "a39ac7bbd18464e049549e05b4694889e7418e82c4d34a7c73afac94b5146db8"
     },
     {
       "event_id": "evt-0006",
       "parent_event_id": "evt-0005",
       "event_type": "agent.shell.proposed_command",
       "actor": "openclaw-dev-agent",
-      "timestamp": "2026-05-07T14:31:29.542220+00:00",
+      "timestamp": "2026-05-07T16:31:50.549422+00:00",
       "summary": "Preflight destructive shell command proposal with sandbox and approval controls.",
       "decision": "resolved",
       "payload": {
@@ -323,14 +444,91 @@
       ],
       "resolution_status": "resolved",
       "receipt_ids": [
-        "receipt-981d3f3d-ac67-4934-8cc3-1fdd4ba0b849",
-        "receipt-815cfe5b-e1e4-4acc-aa1a-3b0d4038aa49",
-        "receipt-37ff6c9f-96ca-414f-bcef-287def70bd2c",
-        "receipt-790d7629-d0af-49f9-9f6c-ee7e1317341c",
-        "receipt-863329d5-c522-4c85-a6f3-b4ddd1ec8e80"
+        "receipt-caebacc9-8241-4dc7-8e40-6f1add199cb2",
+        "receipt-692cc8a4-1f26-4635-bb94-eece92144d06",
+        "receipt-68f77fea-09b7-4167-be1d-6f5036c958f1",
+        "receipt-59eb8d63-cc0b-40ac-beb4-5ba5bedfbf79",
+        "receipt-a827d792-f4d7-4976-bc29-d8f418b5edf8"
       ],
-      "previous_event_hash": "08541dc66e02db14d2120cf7d90b28bdf5d24e37d9457e67c6a076cb6a73bb8e",
-      "event_hash": "a057c6c915614b03a6b2e0bf297989f12cf243dfa51cea106af1cd0262731caf"
+      "receipts": [
+        {
+          "pointer": "shell.propose_command",
+          "type_signature": "command_request -> command_proposal",
+          "target_language": "python",
+          "implementation": "lambda request: {'action': 'propose_shell_command', 'execute': False, 'request': request}",
+          "implementation_hash": "ac4f3dc7cded7bbfe15ae96cf68e95a502978dcafe4efbc2b80d5da204b78fec",
+          "catalog_hash": "effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107",
+          "catalog_id": "shell_ops",
+          "catalog_version": "0.1.0",
+          "artifact_repo": "waynesatz/agent-pidgin-data",
+          "artifact_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "resolver_version": "0.1.0",
+          "resolved_at": "2026-05-07T16:31:50.549391+00:00",
+          "receipt_id": "receipt-caebacc9-8241-4dc7-8e40-6f1add199cb2"
+        },
+        {
+          "pointer": "shell.require_sandbox",
+          "type_signature": "command_request -> policy_requirement",
+          "target_language": "python",
+          "implementation": "lambda request: {'sandbox_required': True, 'request': request}",
+          "implementation_hash": "ca5685e6842c7f9fa93b11016990ca3768b365c17fc7221b81fb12858fb5be50",
+          "catalog_hash": "effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107",
+          "catalog_id": "shell_ops",
+          "catalog_version": "0.1.0",
+          "artifact_repo": "waynesatz/agent-pidgin-data",
+          "artifact_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "resolver_version": "0.1.0",
+          "resolved_at": "2026-05-07T16:31:50.549397+00:00",
+          "receipt_id": "receipt-692cc8a4-1f26-4635-bb94-eece92144d06"
+        },
+        {
+          "pointer": "shell.block_destructive_command",
+          "type_signature": "command_request -> policy_finding",
+          "target_language": "python",
+          "implementation": "lambda request: {'blocked': True, 'reason': 'destructive command requires explicit policy override', 'request': request}",
+          "implementation_hash": "679b2bfb6fd91f2984b8db01737048e77f258d2adc9824b8431d21b79f50e743",
+          "catalog_hash": "effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107",
+          "catalog_id": "shell_ops",
+          "catalog_version": "0.1.0",
+          "artifact_repo": "waynesatz/agent-pidgin-data",
+          "artifact_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "resolver_version": "0.1.0",
+          "resolved_at": "2026-05-07T16:31:50.549402+00:00",
+          "receipt_id": "receipt-68f77fea-09b7-4167-be1d-6f5036c958f1"
+        },
+        {
+          "pointer": "shell.require_human_approval",
+          "type_signature": "command_request -> approval_request",
+          "target_language": "python",
+          "implementation": "lambda request: {'requires_human_approval': True, 'payload': request}",
+          "implementation_hash": "ecbcf6bcdcedea52737028670a473f431dc9e262a254ec74262781d93c90361e",
+          "catalog_hash": "effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107",
+          "catalog_id": "shell_ops",
+          "catalog_version": "0.1.0",
+          "artifact_repo": "waynesatz/agent-pidgin-data",
+          "artifact_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "resolver_version": "0.1.0",
+          "resolved_at": "2026-05-07T16:31:50.549406+00:00",
+          "receipt_id": "receipt-59eb8d63-cc0b-40ac-beb4-5ba5bedfbf79"
+        },
+        {
+          "pointer": "agent.attach_receipts",
+          "type_signature": "resolution -> resolution",
+          "target_language": "python",
+          "implementation": "lambda resolution: resolution",
+          "implementation_hash": "49c937fbcd74790627a9979d746019f2e22c5f44ee1c8e79bd1882920b2c89b7",
+          "catalog_hash": "effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107",
+          "catalog_id": "agent_ops",
+          "catalog_version": "0.1.0",
+          "artifact_repo": "waynesatz/agent-pidgin-data",
+          "artifact_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "resolver_version": "0.1.0",
+          "resolved_at": "2026-05-07T16:31:50.549410+00:00",
+          "receipt_id": "receipt-a827d792-f4d7-4976-bc29-d8f418b5edf8"
+        }
+      ],
+      "previous_event_hash": "a39ac7bbd18464e049549e05b4694889e7418e82c4d34a7c73afac94b5146db8",
+      "event_hash": "4f33f58d5a988c23faeaf086c111361aad31d0d7404330e4b081e2f0c6f78e65"
     }
   ],
   "summary": {
@@ -342,5 +540,5 @@
     "integrity": "hash_chained",
     "receipt_count": 11
   },
-  "trace_hash": "02682d41d3f56d9862a225e1f9e260b14775ee96fb3dfb0d86551c5857a538bd"
+  "trace_hash": "5138a801dbc763b71a6d51d897f2a44d2ea3bdfeb77874561f0405615f5549ea"
 }

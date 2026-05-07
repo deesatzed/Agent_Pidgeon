@@ -15,6 +15,7 @@
       --blocked: #b42318;
       --resolved: #047857;
       --observed: #315b88;
+      --warn: #a15c00;
     }
     body {
       margin: 0;
@@ -41,7 +42,7 @@
       gap: 12px;
       margin-bottom: 24px;
     }
-    .metric, .event {
+    .metric, .event, .panel {
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -53,6 +54,13 @@
     }
     .event {
       margin-bottom: 12px;
+    }
+    .panel {
+      margin-bottom: 18px;
+    }
+    .panel h2 {
+      font-size: 18px;
+      margin: 0 0 10px;
     }
     .event header {
       display: flex;
@@ -68,9 +76,44 @@
       text-transform: uppercase;
       white-space: nowrap;
     }
-    .blocked { background: var(--blocked); }
+    .blocked, .error { background: var(--blocked); }
     .resolved { background: var(--resolved); }
+    .policy_failed, .warning { background: var(--warn); }
     .observed, .drift_detected { background: var(--observed); }
+    .integrity-row, .finding-row, .receipt-row {
+      display: grid;
+      grid-template-columns: minmax(120px, 0.8fr) minmax(180px, 1fr) minmax(220px, 2fr);
+      gap: 10px;
+      border-top: 1px solid var(--line);
+      padding: 9px 0;
+    }
+    .integrity-row:first-of-type, .finding-row:first-of-type, .receipt-row:first-of-type {
+      border-top: 0;
+    }
+    .diff-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .diff-panel {
+      min-width: 0;
+    }
+    .muted {
+      color: var(--muted);
+    }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 8px 0;
+    }
+    .chip {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 3px 8px;
+      background: #f8fafc;
+      font-size: 12px;
+    }
     pre {
       white-space: pre-wrap;
       word-break: break-word;
@@ -88,12 +131,389 @@
 <body>
   <main>
     <h1>OpenClaw-Class Pidgeon Sidecar Replay</h1>
-    <p class="subhead">Trace trace-openclaw-sidecar-001 · status blocked · hash 02682d41d3f56d9862a225e1f9e260b14775ee96fb3dfb0d86551c5857a538bd</p>
+    <p class="subhead">Trace trace-openclaw-sidecar-001 · status blocked · hash 5138a801dbc763b71a6d51d897f2a44d2ea3bdfeb77874561f0405615f5549ea</p>
     <section class="metrics">
       <div class="metric"><span>Events</span><strong>6</strong></div>
       <div class="metric"><span>Blocked</span><strong>3</strong></div>
       <div class="metric"><span>Semantic drift</span><strong>2</strong></div>
       <div class="metric"><span>Receipts</span><strong>11</strong></div>
+    </section>
+    <section class="panel" aria-labelledby="trace-integrity-heading">
+      <h2 id="trace-integrity-heading">Trace integrity</h2>
+      <div class="integrity-row">
+        <span><span class="badge resolved">valid</span></span>
+        <strong>valid hash chain</strong>
+        <span>Event hashes, previous hashes, and trace hash match.</span>
+      </div>
+      <div class="integrity-row">
+        <span>summary</span>
+        <strong>hash_chained</strong>
+        <span class="muted">Top-level trace hash: <code>5138a801dbc763b71a6d51d897f2a44d2ea3bdfeb77874561f0405615f5549ea</code></span>
+      </div>
+    </section>
+    <section class="panel" aria-labelledby="policy-findings-heading">
+      <h2 id="policy-findings-heading">Grouped policy findings</h2>
+      <div class="finding-row">
+        <span><span class="badge error">error</span></span>
+        <strong>DANGEROUS_ACCESS_MODE <span class="muted">(1)</span></strong>
+        <span>Skill requests execute access for shell:*. <span class="muted">Events: evt-0002</span></span>
+      </div><div class="finding-row">
+        <span><span class="badge error">error</span></span>
+        <strong>DANGEROUS_CREDENTIAL_PERMISSION <span class="muted">(1)</span></strong>
+        <span>Skill requests credential read access to AWS_SECRET_ACCESS_KEY. <span class="muted">Events: evt-0002</span></span>
+      </div><div class="finding-row">
+        <span><span class="badge error">error</span></span>
+        <strong>DANGEROUS_SHELL_PERMISSION <span class="muted">(1)</span></strong>
+        <span>Skill requests shell execute access to *. <span class="muted">Events: evt-0002</span></span>
+      </div><div class="finding-row">
+        <span><span class="badge error">error</span></span>
+        <strong>SECRET_PATH_ACCESS <span class="muted">(1)</span></strong>
+        <span>Skill requests filesystem access to likely secret path: ~/.ssh. <span class="muted">Events: evt-0002</span></span>
+      </div><div class="finding-row">
+        <span><span class="badge warning">warning</span></span>
+        <strong>RAW_EXECUTION_DENIED <span class="muted">(3)</span></strong>
+        <span>Policy permits resolution only; resolved implementation strings must not be executed directly. <span class="muted">Events: evt-0004, evt-0005, evt-0006</span></span>
+      </div><div class="finding-row">
+        <span><span class="badge warning">warning</span></span>
+        <strong>UNSIGNED_SKILL <span class="muted">(1)</span></strong>
+        <span>Skill manifest is not signed by a trusted publisher. <span class="muted">Events: evt-0002</span></span>
+      </div>
+    </section>
+    <section class="panel" aria-labelledby="receipt-drilldown-heading">
+      <h2 id="receipt-drilldown-heading">Receipt drilldown</h2>
+      <details class="receipt-row">
+        <summary><strong>evt-0004 · agent.tool.proposed_call</strong></summary>
+        <span>5 receipt IDs</span>
+        <div><div class="chips"><span class="chip">receipt-8abe7c74-d94a-457c-bfc7-711eb4c3eff3</span><span class="chip">receipt-e9573bc2-2fc1-4c8a-b0e1-d17a5057db51</span><span class="chip">receipt-5046772a-e5ae-4663-b702-68654f88de57</span><span class="chip">receipt-ed22f9a2-31bd-4cb0-894c-1e452c888209</span><span class="chip">receipt-c9317151-775a-4e4e-9843-069a7b5c3216</span></div>
+        <p class="muted">Bound to payload <code>3e46e2576c34faa98cb7bbc508a197c21b93c97b23a5fc4770bde65a5c3bbd08</code>; contract <code>0ea486f6e6053cf3287090d1471949eac63d3bb077cd8fa915b60a1709bb85fd</code>; event <code>84ce2969308fcaec02fe85acc16c02aeea79a2c2309a5d39b5f37374d5ae4aa2</code>.</p>
+        <pre><code>[
+  {
+    &quot;artifact_repo&quot;: &quot;waynesatz/agent-pidgin-data&quot;,
+    &quot;artifact_revision&quot;: &quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;,
+    &quot;catalog_hash&quot;: &quot;effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107&quot;,
+    &quot;catalog_id&quot;: &quot;communications&quot;,
+    &quot;catalog_version&quot;: &quot;0.1.0&quot;,
+    &quot;implementation&quot;: &quot;lambda request: {&#x27;status&#x27;: &#x27;drafted&#x27;, &#x27;external_send&#x27;: False, &#x27;request&#x27;: request}&quot;,
+    &quot;implementation_hash&quot;: &quot;e1041d28fb06577c972fdffbbdba08bddf1a4de6a0aeac0ab89ba86b31bd1cc5&quot;,
+    &quot;pointer&quot;: &quot;comm.draft_external_message&quot;,
+    &quot;receipt_id&quot;: &quot;receipt-8abe7c74-d94a-457c-bfc7-711eb4c3eff3&quot;,
+    &quot;resolved_at&quot;: &quot;2026-05-07T16:31:50.548776+00:00&quot;,
+    &quot;resolver_version&quot;: &quot;0.1.0&quot;,
+    &quot;target_language&quot;: &quot;python&quot;,
+    &quot;type_signature&quot;: &quot;message_request -&gt; draft_message&quot;
+  },
+  {
+    &quot;artifact_repo&quot;: &quot;waynesatz/agent-pidgin-data&quot;,
+    &quot;artifact_revision&quot;: &quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;,
+    &quot;catalog_hash&quot;: &quot;effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107&quot;,
+    &quot;catalog_id&quot;: &quot;communications&quot;,
+    &quot;catalog_version&quot;: &quot;0.1.0&quot;,
+    &quot;implementation&quot;: &quot;lambda request: {&#x27;recipient_verification_required&#x27;: True, &#x27;request&#x27;: request}&quot;,
+    &quot;implementation_hash&quot;: &quot;97760db44ef28f13de87b92aa5d0d9c1a7878aed64cf73651f868efd5f89340a&quot;,
+    &quot;pointer&quot;: &quot;comm.require_recipient_verification&quot;,
+    &quot;receipt_id&quot;: &quot;receipt-e9573bc2-2fc1-4c8a-b0e1-d17a5057db51&quot;,
+    &quot;resolved_at&quot;: &quot;2026-05-07T16:31:50.548796+00:00&quot;,
+    &quot;resolver_version&quot;: &quot;0.1.0&quot;,
+    &quot;target_language&quot;: &quot;python&quot;,
+    &quot;type_signature&quot;: &quot;message_request -&gt; verification_request&quot;
+  },
+  {
+    &quot;artifact_repo&quot;: &quot;waynesatz/agent-pidgin-data&quot;,
+    &quot;artifact_revision&quot;: &quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;,
+    &quot;catalog_hash&quot;: &quot;effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107&quot;,
+    &quot;catalog_id&quot;: &quot;communications&quot;,
+    &quot;catalog_version&quot;: &quot;0.1.0&quot;,
+    &quot;implementation&quot;: &quot;lambda request: {&#x27;requires_human_approval&#x27;: True, &#x27;payload&#x27;: request}&quot;,
+    &quot;implementation_hash&quot;: &quot;ecbcf6bcdcedea52737028670a473f431dc9e262a254ec74262781d93c90361e&quot;,
+    &quot;pointer&quot;: &quot;comm.require_human_approval&quot;,
+    &quot;receipt_id&quot;: &quot;receipt-5046772a-e5ae-4663-b702-68654f88de57&quot;,
+    &quot;resolved_at&quot;: &quot;2026-05-07T16:31:50.548804+00:00&quot;,
+    &quot;resolver_version&quot;: &quot;0.1.0&quot;,
+    &quot;target_language&quot;: &quot;python&quot;,
+    &quot;type_signature&quot;: &quot;message_request -&gt; approval_request&quot;
+  },
+  {
+    &quot;artifact_repo&quot;: &quot;waynesatz/agent-pidgin-data&quot;,
+    &quot;artifact_revision&quot;: &quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;,
+    &quot;catalog_hash&quot;: &quot;effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107&quot;,
+    &quot;catalog_id&quot;: &quot;communications&quot;,
+    &quot;catalog_version&quot;: &quot;0.1.0&quot;,
+    &quot;implementation&quot;: &quot;lambda message: {&#x27;action&#x27;: &#x27;send_external_message&#x27;, &#x27;requires_approval&#x27;: True, &#x27;message&#x27;: message}&quot;,
+    &quot;implementation_hash&quot;: &quot;b07196f97541fbee4fcd9d90ab9a29fe043c284d22cbbba1fca9f3ad617a8140&quot;,
+    &quot;pointer&quot;: &quot;comm.send_external_message&quot;,
+    &quot;receipt_id&quot;: &quot;receipt-ed22f9a2-31bd-4cb0-894c-1e452c888209&quot;,
+    &quot;resolved_at&quot;: &quot;2026-05-07T16:31:50.548809+00:00&quot;,
+    &quot;resolver_version&quot;: &quot;0.1.0&quot;,
+    &quot;target_language&quot;: &quot;python&quot;,
+    &quot;type_signature&quot;: &quot;approved_message -&gt; send_request&quot;
+  },
+  {
+    &quot;artifact_repo&quot;: &quot;waynesatz/agent-pidgin-data&quot;,
+    &quot;artifact_revision&quot;: &quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;,
+    &quot;catalog_hash&quot;: &quot;effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107&quot;,
+    &quot;catalog_id&quot;: &quot;agent_ops&quot;,
+    &quot;catalog_version&quot;: &quot;0.1.0&quot;,
+    &quot;implementation&quot;: &quot;lambda resolution: resolution&quot;,
+    &quot;implementation_hash&quot;: &quot;49c937fbcd74790627a9979d746019f2e22c5f44ee1c8e79bd1882920b2c89b7&quot;,
+    &quot;pointer&quot;: &quot;agent.attach_receipts&quot;,
+    &quot;receipt_id&quot;: &quot;receipt-c9317151-775a-4e4e-9843-069a7b5c3216&quot;,
+    &quot;resolved_at&quot;: &quot;2026-05-07T16:31:50.548814+00:00&quot;,
+    &quot;resolver_version&quot;: &quot;0.1.0&quot;,
+    &quot;target_language&quot;: &quot;python&quot;,
+    &quot;type_signature&quot;: &quot;resolution -&gt; resolution&quot;
+  }
+]</code></pre></div>
+      </details><details class="receipt-row">
+        <summary><strong>evt-0005 · agent.tool.proposed_call</strong></summary>
+        <span>1 receipt ID</span>
+        <div><div class="chips"><span class="chip">receipt-a5123728-5fb3-4064-be9f-62ecb626d1dc</span></div>
+        <p class="muted">Bound to payload <code>36992a755001e149449e20b063b427674cc38ccce00737d7027f7190637205ca</code>; previous contract <code>0ea486f6e6053cf3287090d1471949eac63d3bb077cd8fa915b60a1709bb85fd</code>; contract <code>69465421e59543e80961fd8cf43da68d44f4a90995a8f390de95bb62d0fa4f1e</code>; event <code>a39ac7bbd18464e049549e05b4694889e7418e82c4d34a7c73afac94b5146db8</code>.</p>
+        <pre><code>[
+  {
+    &quot;artifact_repo&quot;: &quot;waynesatz/agent-pidgin-data&quot;,
+    &quot;artifact_revision&quot;: &quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;,
+    &quot;catalog_hash&quot;: &quot;effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107&quot;,
+    &quot;catalog_id&quot;: &quot;communications&quot;,
+    &quot;catalog_version&quot;: &quot;0.1.0&quot;,
+    &quot;implementation&quot;: &quot;lambda message: {&#x27;action&#x27;: &#x27;send_external_message&#x27;, &#x27;requires_approval&#x27;: True, &#x27;message&#x27;: message}&quot;,
+    &quot;implementation_hash&quot;: &quot;b07196f97541fbee4fcd9d90ab9a29fe043c284d22cbbba1fca9f3ad617a8140&quot;,
+    &quot;pointer&quot;: &quot;comm.send_external_message&quot;,
+    &quot;receipt_id&quot;: &quot;receipt-a5123728-5fb3-4064-be9f-62ecb626d1dc&quot;,
+    &quot;resolved_at&quot;: &quot;2026-05-07T16:31:50.549107+00:00&quot;,
+    &quot;resolver_version&quot;: &quot;0.1.0&quot;,
+    &quot;target_language&quot;: &quot;python&quot;,
+    &quot;type_signature&quot;: &quot;approved_message -&gt; send_request&quot;
+  }
+]</code></pre></div>
+      </details><details class="receipt-row">
+        <summary><strong>evt-0006 · agent.shell.proposed_command</strong></summary>
+        <span>5 receipt IDs</span>
+        <div><div class="chips"><span class="chip">receipt-caebacc9-8241-4dc7-8e40-6f1add199cb2</span><span class="chip">receipt-692cc8a4-1f26-4635-bb94-eece92144d06</span><span class="chip">receipt-68f77fea-09b7-4167-be1d-6f5036c958f1</span><span class="chip">receipt-59eb8d63-cc0b-40ac-beb4-5ba5bedfbf79</span><span class="chip">receipt-a827d792-f4d7-4976-bc29-d8f418b5edf8</span></div>
+        <p class="muted">Bound to payload <code>dd4c94af3dc4900b81d0f10f5d07735bb580b3398a5612be62b0a0c89dfbcb62</code>; contract <code>933dceda77b77606c56757d0ca8ac7b06f95cfdd10e90ef82b9f6fab3c211e3f</code>; event <code>4f33f58d5a988c23faeaf086c111361aad31d0d7404330e4b081e2f0c6f78e65</code>.</p>
+        <pre><code>[
+  {
+    &quot;artifact_repo&quot;: &quot;waynesatz/agent-pidgin-data&quot;,
+    &quot;artifact_revision&quot;: &quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;,
+    &quot;catalog_hash&quot;: &quot;effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107&quot;,
+    &quot;catalog_id&quot;: &quot;shell_ops&quot;,
+    &quot;catalog_version&quot;: &quot;0.1.0&quot;,
+    &quot;implementation&quot;: &quot;lambda request: {&#x27;action&#x27;: &#x27;propose_shell_command&#x27;, &#x27;execute&#x27;: False, &#x27;request&#x27;: request}&quot;,
+    &quot;implementation_hash&quot;: &quot;ac4f3dc7cded7bbfe15ae96cf68e95a502978dcafe4efbc2b80d5da204b78fec&quot;,
+    &quot;pointer&quot;: &quot;shell.propose_command&quot;,
+    &quot;receipt_id&quot;: &quot;receipt-caebacc9-8241-4dc7-8e40-6f1add199cb2&quot;,
+    &quot;resolved_at&quot;: &quot;2026-05-07T16:31:50.549391+00:00&quot;,
+    &quot;resolver_version&quot;: &quot;0.1.0&quot;,
+    &quot;target_language&quot;: &quot;python&quot;,
+    &quot;type_signature&quot;: &quot;command_request -&gt; command_proposal&quot;
+  },
+  {
+    &quot;artifact_repo&quot;: &quot;waynesatz/agent-pidgin-data&quot;,
+    &quot;artifact_revision&quot;: &quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;,
+    &quot;catalog_hash&quot;: &quot;effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107&quot;,
+    &quot;catalog_id&quot;: &quot;shell_ops&quot;,
+    &quot;catalog_version&quot;: &quot;0.1.0&quot;,
+    &quot;implementation&quot;: &quot;lambda request: {&#x27;sandbox_required&#x27;: True, &#x27;request&#x27;: request}&quot;,
+    &quot;implementation_hash&quot;: &quot;ca5685e6842c7f9fa93b11016990ca3768b365c17fc7221b81fb12858fb5be50&quot;,
+    &quot;pointer&quot;: &quot;shell.require_sandbox&quot;,
+    &quot;receipt_id&quot;: &quot;receipt-692cc8a4-1f26-4635-bb94-eece92144d06&quot;,
+    &quot;resolved_at&quot;: &quot;2026-05-07T16:31:50.549397+00:00&quot;,
+    &quot;resolver_version&quot;: &quot;0.1.0&quot;,
+    &quot;target_language&quot;: &quot;python&quot;,
+    &quot;type_signature&quot;: &quot;command_request -&gt; policy_requirement&quot;
+  },
+  {
+    &quot;artifact_repo&quot;: &quot;waynesatz/agent-pidgin-data&quot;,
+    &quot;artifact_revision&quot;: &quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;,
+    &quot;catalog_hash&quot;: &quot;effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107&quot;,
+    &quot;catalog_id&quot;: &quot;shell_ops&quot;,
+    &quot;catalog_version&quot;: &quot;0.1.0&quot;,
+    &quot;implementation&quot;: &quot;lambda request: {&#x27;blocked&#x27;: True, &#x27;reason&#x27;: &#x27;destructive command requires explicit policy override&#x27;, &#x27;request&#x27;: request}&quot;,
+    &quot;implementation_hash&quot;: &quot;679b2bfb6fd91f2984b8db01737048e77f258d2adc9824b8431d21b79f50e743&quot;,
+    &quot;pointer&quot;: &quot;shell.block_destructive_command&quot;,
+    &quot;receipt_id&quot;: &quot;receipt-68f77fea-09b7-4167-be1d-6f5036c958f1&quot;,
+    &quot;resolved_at&quot;: &quot;2026-05-07T16:31:50.549402+00:00&quot;,
+    &quot;resolver_version&quot;: &quot;0.1.0&quot;,
+    &quot;target_language&quot;: &quot;python&quot;,
+    &quot;type_signature&quot;: &quot;command_request -&gt; policy_finding&quot;
+  },
+  {
+    &quot;artifact_repo&quot;: &quot;waynesatz/agent-pidgin-data&quot;,
+    &quot;artifact_revision&quot;: &quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;,
+    &quot;catalog_hash&quot;: &quot;effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107&quot;,
+    &quot;catalog_id&quot;: &quot;shell_ops&quot;,
+    &quot;catalog_version&quot;: &quot;0.1.0&quot;,
+    &quot;implementation&quot;: &quot;lambda request: {&#x27;requires_human_approval&#x27;: True, &#x27;payload&#x27;: request}&quot;,
+    &quot;implementation_hash&quot;: &quot;ecbcf6bcdcedea52737028670a473f431dc9e262a254ec74262781d93c90361e&quot;,
+    &quot;pointer&quot;: &quot;shell.require_human_approval&quot;,
+    &quot;receipt_id&quot;: &quot;receipt-59eb8d63-cc0b-40ac-beb4-5ba5bedfbf79&quot;,
+    &quot;resolved_at&quot;: &quot;2026-05-07T16:31:50.549406+00:00&quot;,
+    &quot;resolver_version&quot;: &quot;0.1.0&quot;,
+    &quot;target_language&quot;: &quot;python&quot;,
+    &quot;type_signature&quot;: &quot;command_request -&gt; approval_request&quot;
+  },
+  {
+    &quot;artifact_repo&quot;: &quot;waynesatz/agent-pidgin-data&quot;,
+    &quot;artifact_revision&quot;: &quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;,
+    &quot;catalog_hash&quot;: &quot;effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107&quot;,
+    &quot;catalog_id&quot;: &quot;agent_ops&quot;,
+    &quot;catalog_version&quot;: &quot;0.1.0&quot;,
+    &quot;implementation&quot;: &quot;lambda resolution: resolution&quot;,
+    &quot;implementation_hash&quot;: &quot;49c937fbcd74790627a9979d746019f2e22c5f44ee1c8e79bd1882920b2c89b7&quot;,
+    &quot;pointer&quot;: &quot;agent.attach_receipts&quot;,
+    &quot;receipt_id&quot;: &quot;receipt-a827d792-f4d7-4976-bc29-d8f418b5edf8&quot;,
+    &quot;resolved_at&quot;: &quot;2026-05-07T16:31:50.549410+00:00&quot;,
+    &quot;resolver_version&quot;: &quot;0.1.0&quot;,
+    &quot;target_language&quot;: &quot;python&quot;,
+    &quot;type_signature&quot;: &quot;resolution -&gt; resolution&quot;
+  }
+]</code></pre></div>
+      </details>
+    </section>
+    <section class="panel" aria-labelledby="semantic-diff-heading">
+      <h2 id="semantic-diff-heading">Semantic diff and before/after</h2>
+      <article class="event">
+        <header>
+          <div>
+            <strong>evt-0003 · agent.memory.proposed_update</strong>
+            <p class="muted">Risk level: high</p>
+          </div>
+          <span class="badge blocked">blocked</span>
+        </header>
+        <div class="diff-grid">
+          <div class="diff-panel"><strong>Before</strong><pre><code>{
+  &quot;external_email_allowed&quot;: false,
+  &quot;human_review_required_for_external_send&quot;: true,
+  &quot;may_read_secret_paths&quot;: false,
+  &quot;work_email_allowed_channels&quot;: [
+    &quot;slack:work&quot;,
+    &quot;teams:work&quot;
+  ]
+}</code></pre></div>
+          <div class="diff-panel"><strong>After</strong><pre><code>{
+  &quot;external_email_allowed&quot;: true,
+  &quot;human_review_required_for_external_send&quot;: false,
+  &quot;may_read_secret_paths&quot;: true,
+  &quot;work_email_allowed_channels&quot;: [
+    &quot;slack:work&quot;,
+    &quot;teams:work&quot;,
+    &quot;whatsapp:personal&quot;
+  ]
+}</code></pre></div>
+        </div>
+        <pre><code>{
+  &quot;added&quot;: [],
+  &quot;changed&quot;: [
+    {
+      &quot;field&quot;: &quot;external_email_allowed&quot;,
+      &quot;left&quot;: false,
+      &quot;right&quot;: true
+    },
+    {
+      &quot;field&quot;: &quot;human_review_required_for_external_send&quot;,
+      &quot;left&quot;: true,
+      &quot;right&quot;: false
+    },
+    {
+      &quot;field&quot;: &quot;may_read_secret_paths&quot;,
+      &quot;left&quot;: false,
+      &quot;right&quot;: true
+    },
+    {
+      &quot;field&quot;: &quot;work_email_allowed_channels&quot;,
+      &quot;left&quot;: [
+        &quot;slack:work&quot;,
+        &quot;teams:work&quot;
+      ],
+      &quot;right&quot;: [
+        &quot;slack:work&quot;,
+        &quot;teams:work&quot;,
+        &quot;whatsapp:personal&quot;
+      ]
+    }
+  ],
+  &quot;contract_changes&quot;: [],
+  &quot;removed&quot;: [],
+  &quot;risk_level&quot;: &quot;high&quot;,
+  &quot;risk_notes&quot;: [
+    &quot;Memory guardrail weakened without approval: external_email_allowed&quot;,
+    &quot;Memory guardrail weakened without approval: human_review_required_for_external_send&quot;,
+    &quot;Memory guardrail weakened without approval: may_read_secret_paths&quot;
+  ]
+}</code></pre>
+      </article><article class="event">
+        <header>
+          <div>
+            <strong>evt-0005 · agent.tool.proposed_call</strong>
+            <p class="muted">Risk level: high</p>
+          </div>
+          <span class="badge blocked">blocked</span>
+        </header>
+        <div class="diff-grid">
+          <div class="diff-panel"><strong>Previous contract</strong><pre><code>{
+  &quot;artifact&quot;: {
+    &quot;kind&quot;: &quot;repo&quot;,
+    &quot;repo&quot;: &quot;waynesatz/agent-pidgin-data&quot;,
+    &quot;revision&quot;: &quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;
+  },
+  &quot;created_at&quot;: &quot;2026-05-07T12:00:00Z&quot;,
+  &quot;message_id&quot;: &quot;openclaw-email-001&quot;,
+  &quot;message_type&quot;: &quot;resolve&quot;,
+  &quot;metadata&quot;: {
+    &quot;channel&quot;: &quot;slack:support-escalations&quot;,
+    &quot;source&quot;: &quot;openclaw_class_preflight&quot;,
+    &quot;tool_name&quot;: &quot;email.send_customer&quot;
+  },
+  &quot;pidgin_version&quot;: &quot;0.1&quot;,
+  &quot;receiver_id&quot;: &quot;agent-pidgeon&quot;,
+  &quot;sender_id&quot;: &quot;openclaw-support-agent&quot;,
+  &quot;steps&quot;: [
+    &quot;comm.draft_external_message&quot;,
+    &quot;comm.require_recipient_verification&quot;,
+    &quot;comm.require_human_approval&quot;,
+    &quot;comm.send_external_message&quot;,
+    &quot;agent.attach_receipts&quot;
+  ],
+  &quot;target_language&quot;: &quot;python&quot;
+}</code></pre></div>
+          <div class="diff-panel"><strong>Proposed contract</strong><pre><code>{
+  &quot;artifact&quot;: {
+    &quot;kind&quot;: &quot;repo&quot;,
+    &quot;repo&quot;: &quot;waynesatz/agent-pidgin-data&quot;,
+    &quot;revision&quot;: &quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;
+  },
+  &quot;created_at&quot;: &quot;2026-05-07T12:00:00Z&quot;,
+  &quot;message_id&quot;: &quot;openclaw-email-unsafe-001&quot;,
+  &quot;message_type&quot;: &quot;resolve&quot;,
+  &quot;metadata&quot;: {
+    &quot;channel&quot;: &quot;slack:support-escalations&quot;,
+    &quot;source&quot;: &quot;openclaw_class_preflight&quot;,
+    &quot;tool_name&quot;: &quot;email.send_customer&quot;
+  },
+  &quot;pidgin_version&quot;: &quot;0.1&quot;,
+  &quot;receiver_id&quot;: &quot;agent-pidgeon&quot;,
+  &quot;sender_id&quot;: &quot;openclaw-support-agent&quot;,
+  &quot;steps&quot;: [
+    &quot;comm.send_external_message&quot;
+  ],
+  &quot;target_language&quot;: &quot;python&quot;
+}</code></pre></div>
+        </div>
+        <pre><code>{
+  &quot;added&quot;: [],
+  &quot;changed&quot;: [],
+  &quot;contract_changes&quot;: [],
+  &quot;removed&quot;: [
+    &quot;comm.draft_external_message&quot;,
+    &quot;comm.require_recipient_verification&quot;,
+    &quot;comm.require_human_approval&quot;,
+    &quot;agent.attach_receipts&quot;
+  ],
+  &quot;risk_level&quot;: &quot;high&quot;,
+  &quot;risk_notes&quot;: [
+    &quot;Control guardrail removed from workflow: agent.attach_receipts&quot;
+  ]
+}</code></pre>
+      </article>
     </section>
     <section>
       <article class="event">
@@ -101,18 +521,19 @@
     <div>
       <strong>evt-0001 · agent.goal.received</strong>
       <p>Handle a support escalation through Slack without unsafe external actions.</p>
+      
     </div>
     <span class="badge observed">observed</span>
   </header>
   <pre><code>{
-  &quot;event_id&quot;: &quot;evt-0001&quot;,
-  &quot;parent_event_id&quot;: null,
-  &quot;event_type&quot;: &quot;agent.goal.received&quot;,
   &quot;actor&quot;: &quot;openclaw-gateway&quot;,
+  &quot;event_hash&quot;: &quot;ddcfc4fbb8458a5b06e60e15f808efd84c7e15d1c8aaa9adc4334e26f48b5c80&quot;,
+  &quot;event_id&quot;: &quot;evt-0001&quot;,
+  &quot;event_type&quot;: &quot;agent.goal.received&quot;,
+  &quot;parent_event_id&quot;: null,
   &quot;payload_hash&quot;: &quot;4798acd93c8f2ede3dc64448876cc1e1c005f8586cbe1a5c0a62de39b60b773b&quot;,
   &quot;policy_findings&quot;: [],
-  &quot;receipt_ids&quot;: [],
-  &quot;event_hash&quot;: &quot;f9c29a6ecd7b4305a34ef4f21f50cbb6928c666c6d1ecc94aab5288a8333a0aa&quot;
+  &quot;receipt_ids&quot;: []
 }</code></pre>
 </article>
 <article class="event">
@@ -120,45 +541,46 @@
     <div>
       <strong>evt-0002 · agent.skill.proposed_install</strong>
       <p>Preflight unsigned community skill before install.</p>
+      <div class="chips"><span class="chip">policy: 5</span></div>
     </div>
     <span class="badge blocked">blocked</span>
   </header>
   <pre><code>{
-  &quot;event_id&quot;: &quot;evt-0002&quot;,
-  &quot;parent_event_id&quot;: &quot;evt-0001&quot;,
-  &quot;event_type&quot;: &quot;agent.skill.proposed_install&quot;,
   &quot;actor&quot;: &quot;openclaw-gateway&quot;,
+  &quot;event_hash&quot;: &quot;9ec0ccf19f54f024f55bc5d6859f86a1731ae96f7d401d3f7b1dd029284776c2&quot;,
+  &quot;event_id&quot;: &quot;evt-0002&quot;,
+  &quot;event_type&quot;: &quot;agent.skill.proposed_install&quot;,
+  &quot;parent_event_id&quot;: &quot;evt-0001&quot;,
   &quot;payload_hash&quot;: &quot;196824b97974647d8106a9fdcdd9d3e84b98dfb347deb64e43dd093bf6713067&quot;,
-  &quot;skill_manifest_hash&quot;: &quot;d093b0029f1a5a7091a32e5b142356a78d3f36aee6362bde85e6641e50939b54&quot;,
   &quot;policy_findings&quot;: [
     {
-      &quot;severity&quot;: &quot;warning&quot;,
       &quot;code&quot;: &quot;UNSIGNED_SKILL&quot;,
-      &quot;message&quot;: &quot;Skill manifest is not signed by a trusted publisher.&quot;
+      &quot;message&quot;: &quot;Skill manifest is not signed by a trusted publisher.&quot;,
+      &quot;severity&quot;: &quot;warning&quot;
     },
     {
-      &quot;severity&quot;: &quot;error&quot;,
       &quot;code&quot;: &quot;SECRET_PATH_ACCESS&quot;,
-      &quot;message&quot;: &quot;Skill requests filesystem access to likely secret path: ~/.ssh.&quot;
+      &quot;message&quot;: &quot;Skill requests filesystem access to likely secret path: ~/.ssh.&quot;,
+      &quot;severity&quot;: &quot;error&quot;
     },
     {
-      &quot;severity&quot;: &quot;error&quot;,
       &quot;code&quot;: &quot;DANGEROUS_SHELL_PERMISSION&quot;,
-      &quot;message&quot;: &quot;Skill requests shell execute access to *.&quot;
+      &quot;message&quot;: &quot;Skill requests shell execute access to *.&quot;,
+      &quot;severity&quot;: &quot;error&quot;
     },
     {
-      &quot;severity&quot;: &quot;error&quot;,
       &quot;code&quot;: &quot;DANGEROUS_ACCESS_MODE&quot;,
-      &quot;message&quot;: &quot;Skill requests execute access for shell:*.&quot;
+      &quot;message&quot;: &quot;Skill requests execute access for shell:*.&quot;,
+      &quot;severity&quot;: &quot;error&quot;
     },
     {
-      &quot;severity&quot;: &quot;error&quot;,
       &quot;code&quot;: &quot;DANGEROUS_CREDENTIAL_PERMISSION&quot;,
-      &quot;message&quot;: &quot;Skill requests credential read access to AWS_SECRET_ACCESS_KEY.&quot;
+      &quot;message&quot;: &quot;Skill requests credential read access to AWS_SECRET_ACCESS_KEY.&quot;,
+      &quot;severity&quot;: &quot;error&quot;
     }
   ],
   &quot;receipt_ids&quot;: [],
-  &quot;event_hash&quot;: &quot;66825a92d409e34d05bbb8afbe5d65acfca0a63b79414fd527d82639ede3feea&quot;
+  &quot;skill_manifest_hash&quot;: &quot;d093b0029f1a5a7091a32e5b142356a78d3f36aee6362bde85e6641e50939b54&quot;
 }</code></pre>
 </article>
 <article class="event">
@@ -166,19 +588,21 @@
     <div>
       <strong>evt-0003 · agent.memory.proposed_update</strong>
       <p>Preflight proposed memory update from personal-channel context.</p>
+      <div class="chips"><span class="chip">diff: high</span></div>
     </div>
     <span class="badge blocked">blocked</span>
   </header>
   <pre><code>{
-  &quot;event_id&quot;: &quot;evt-0003&quot;,
-  &quot;parent_event_id&quot;: &quot;evt-0002&quot;,
-  &quot;event_type&quot;: &quot;agent.memory.proposed_update&quot;,
   &quot;actor&quot;: &quot;openclaw-personal-agent&quot;,
+  &quot;event_hash&quot;: &quot;5614bb53683c9331dd54c7e841f229bcc067d759952c74da9f6d1754ba8d779e&quot;,
+  &quot;event_id&quot;: &quot;evt-0003&quot;,
+  &quot;event_type&quot;: &quot;agent.memory.proposed_update&quot;,
+  &quot;parent_event_id&quot;: &quot;evt-0002&quot;,
   &quot;payload_hash&quot;: &quot;7b5a0f303b94e4398c18afeeac5570d972b844231b9e92eea866f0a37e57143d&quot;,
   &quot;policy_findings&quot;: [],
+  &quot;receipt_ids&quot;: [],
   &quot;semantic_diff&quot;: {
     &quot;added&quot;: [],
-    &quot;removed&quot;: [],
     &quot;changed&quot;: [
       {
         &quot;field&quot;: &quot;external_email_allowed&quot;,
@@ -208,16 +632,15 @@
         ]
       }
     ],
+    &quot;contract_changes&quot;: [],
+    &quot;removed&quot;: [],
     &quot;risk_level&quot;: &quot;high&quot;,
     &quot;risk_notes&quot;: [
       &quot;Memory guardrail weakened without approval: external_email_allowed&quot;,
       &quot;Memory guardrail weakened without approval: human_review_required_for_external_send&quot;,
       &quot;Memory guardrail weakened without approval: may_read_secret_paths&quot;
-    ],
-    &quot;contract_changes&quot;: []
-  },
-  &quot;receipt_ids&quot;: [],
-  &quot;event_hash&quot;: &quot;74ed03f24cca9b5bd013efb16d81d7928d96968dfaf28ee3c1e0cddb1752034f&quot;
+    ]
+  }
 }</code></pre>
 </article>
 <article class="event">
@@ -225,31 +648,109 @@
     <div>
       <strong>evt-0004 · agent.tool.proposed_call</strong>
       <p>Preflight safe external email draft with approval and receipt guardrails.</p>
+      <div class="chips"><span class="chip">policy: 1</span><span class="chip">receipts: 5</span></div>
     </div>
     <span class="badge resolved">resolved</span>
   </header>
   <pre><code>{
-  &quot;event_id&quot;: &quot;evt-0004&quot;,
-  &quot;parent_event_id&quot;: &quot;evt-0003&quot;,
-  &quot;event_type&quot;: &quot;agent.tool.proposed_call&quot;,
   &quot;actor&quot;: &quot;openclaw-support-agent&quot;,
-  &quot;payload_hash&quot;: &quot;3e46e2576c34faa98cb7bbc508a197c21b93c97b23a5fc4770bde65a5c3bbd08&quot;,
   &quot;contract_hash&quot;: &quot;0ea486f6e6053cf3287090d1471949eac63d3bb077cd8fa915b60a1709bb85fd&quot;,
+  &quot;event_hash&quot;: &quot;84ce2969308fcaec02fe85acc16c02aeea79a2c2309a5d39b5f37374d5ae4aa2&quot;,
+  &quot;event_id&quot;: &quot;evt-0004&quot;,
+  &quot;event_type&quot;: &quot;agent.tool.proposed_call&quot;,
+  &quot;parent_event_id&quot;: &quot;evt-0003&quot;,
+  &quot;payload_hash&quot;: &quot;3e46e2576c34faa98cb7bbc508a197c21b93c97b23a5fc4770bde65a5c3bbd08&quot;,
   &quot;policy_findings&quot;: [
     {
-      &quot;severity&quot;: &quot;warning&quot;,
       &quot;code&quot;: &quot;RAW_EXECUTION_DENIED&quot;,
-      &quot;message&quot;: &quot;Policy permits resolution only; resolved implementation strings must not be executed directly.&quot;
+      &quot;message&quot;: &quot;Policy permits resolution only; resolved implementation strings must not be executed directly.&quot;,
+      &quot;severity&quot;: &quot;warning&quot;
     }
   ],
   &quot;receipt_ids&quot;: [
-    &quot;receipt-965cd002-2845-4cee-9eb7-37f42cc930b9&quot;,
-    &quot;receipt-572ab2db-912a-47e1-a49c-2734624ee372&quot;,
-    &quot;receipt-580ef601-4425-4dda-8474-75611c3a2cc7&quot;,
-    &quot;receipt-7e756ef2-a321-46c1-94f1-90775d7307ee&quot;,
-    &quot;receipt-89fa7499-a59d-4cef-8e7a-2f72f33cff64&quot;
+    &quot;receipt-8abe7c74-d94a-457c-bfc7-711eb4c3eff3&quot;,
+    &quot;receipt-e9573bc2-2fc1-4c8a-b0e1-d17a5057db51&quot;,
+    &quot;receipt-5046772a-e5ae-4663-b702-68654f88de57&quot;,
+    &quot;receipt-ed22f9a2-31bd-4cb0-894c-1e452c888209&quot;,
+    &quot;receipt-c9317151-775a-4e4e-9843-069a7b5c3216&quot;
   ],
-  &quot;event_hash&quot;: &quot;c7673b3550b4684b61f8501c5e11abe77c3028c968c06e69cc0405c20534d9e4&quot;
+  &quot;receipts&quot;: [
+    {
+      &quot;artifact_repo&quot;: &quot;waynesatz/agent-pidgin-data&quot;,
+      &quot;artifact_revision&quot;: &quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;,
+      &quot;catalog_hash&quot;: &quot;effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107&quot;,
+      &quot;catalog_id&quot;: &quot;communications&quot;,
+      &quot;catalog_version&quot;: &quot;0.1.0&quot;,
+      &quot;implementation&quot;: &quot;lambda request: {&#x27;status&#x27;: &#x27;drafted&#x27;, &#x27;external_send&#x27;: False, &#x27;request&#x27;: request}&quot;,
+      &quot;implementation_hash&quot;: &quot;e1041d28fb06577c972fdffbbdba08bddf1a4de6a0aeac0ab89ba86b31bd1cc5&quot;,
+      &quot;pointer&quot;: &quot;comm.draft_external_message&quot;,
+      &quot;receipt_id&quot;: &quot;receipt-8abe7c74-d94a-457c-bfc7-711eb4c3eff3&quot;,
+      &quot;resolved_at&quot;: &quot;2026-05-07T16:31:50.548776+00:00&quot;,
+      &quot;resolver_version&quot;: &quot;0.1.0&quot;,
+      &quot;target_language&quot;: &quot;python&quot;,
+      &quot;type_signature&quot;: &quot;message_request -&gt; draft_message&quot;
+    },
+    {
+      &quot;artifact_repo&quot;: &quot;waynesatz/agent-pidgin-data&quot;,
+      &quot;artifact_revision&quot;: &quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;,
+      &quot;catalog_hash&quot;: &quot;effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107&quot;,
+      &quot;catalog_id&quot;: &quot;communications&quot;,
+      &quot;catalog_version&quot;: &quot;0.1.0&quot;,
+      &quot;implementation&quot;: &quot;lambda request: {&#x27;recipient_verification_required&#x27;: True, &#x27;request&#x27;: request}&quot;,
+      &quot;implementation_hash&quot;: &quot;97760db44ef28f13de87b92aa5d0d9c1a7878aed64cf73651f868efd5f89340a&quot;,
+      &quot;pointer&quot;: &quot;comm.require_recipient_verification&quot;,
+      &quot;receipt_id&quot;: &quot;receipt-e9573bc2-2fc1-4c8a-b0e1-d17a5057db51&quot;,
+      &quot;resolved_at&quot;: &quot;2026-05-07T16:31:50.548796+00:00&quot;,
+      &quot;resolver_version&quot;: &quot;0.1.0&quot;,
+      &quot;target_language&quot;: &quot;python&quot;,
+      &quot;type_signature&quot;: &quot;message_request -&gt; verification_request&quot;
+    },
+    {
+      &quot;artifact_repo&quot;: &quot;waynesatz/agent-pidgin-data&quot;,
+      &quot;artifact_revision&quot;: &quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;,
+      &quot;catalog_hash&quot;: &quot;effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107&quot;,
+      &quot;catalog_id&quot;: &quot;communications&quot;,
+      &quot;catalog_version&quot;: &quot;0.1.0&quot;,
+      &quot;implementation&quot;: &quot;lambda request: {&#x27;requires_human_approval&#x27;: True, &#x27;payload&#x27;: request}&quot;,
+      &quot;implementation_hash&quot;: &quot;ecbcf6bcdcedea52737028670a473f431dc9e262a254ec74262781d93c90361e&quot;,
+      &quot;pointer&quot;: &quot;comm.require_human_approval&quot;,
+      &quot;receipt_id&quot;: &quot;receipt-5046772a-e5ae-4663-b702-68654f88de57&quot;,
+      &quot;resolved_at&quot;: &quot;2026-05-07T16:31:50.548804+00:00&quot;,
+      &quot;resolver_version&quot;: &quot;0.1.0&quot;,
+      &quot;target_language&quot;: &quot;python&quot;,
+      &quot;type_signature&quot;: &quot;message_request -&gt; approval_request&quot;
+    },
+    {
+      &quot;artifact_repo&quot;: &quot;waynesatz/agent-pidgin-data&quot;,
+      &quot;artifact_revision&quot;: &quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;,
+      &quot;catalog_hash&quot;: &quot;effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107&quot;,
+      &quot;catalog_id&quot;: &quot;communications&quot;,
+      &quot;catalog_version&quot;: &quot;0.1.0&quot;,
+      &quot;implementation&quot;: &quot;lambda message: {&#x27;action&#x27;: &#x27;send_external_message&#x27;, &#x27;requires_approval&#x27;: True, &#x27;message&#x27;: message}&quot;,
+      &quot;implementation_hash&quot;: &quot;b07196f97541fbee4fcd9d90ab9a29fe043c284d22cbbba1fca9f3ad617a8140&quot;,
+      &quot;pointer&quot;: &quot;comm.send_external_message&quot;,
+      &quot;receipt_id&quot;: &quot;receipt-ed22f9a2-31bd-4cb0-894c-1e452c888209&quot;,
+      &quot;resolved_at&quot;: &quot;2026-05-07T16:31:50.548809+00:00&quot;,
+      &quot;resolver_version&quot;: &quot;0.1.0&quot;,
+      &quot;target_language&quot;: &quot;python&quot;,
+      &quot;type_signature&quot;: &quot;approved_message -&gt; send_request&quot;
+    },
+    {
+      &quot;artifact_repo&quot;: &quot;waynesatz/agent-pidgin-data&quot;,
+      &quot;artifact_revision&quot;: &quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;,
+      &quot;catalog_hash&quot;: &quot;effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107&quot;,
+      &quot;catalog_id&quot;: &quot;agent_ops&quot;,
+      &quot;catalog_version&quot;: &quot;0.1.0&quot;,
+      &quot;implementation&quot;: &quot;lambda resolution: resolution&quot;,
+      &quot;implementation_hash&quot;: &quot;49c937fbcd74790627a9979d746019f2e22c5f44ee1c8e79bd1882920b2c89b7&quot;,
+      &quot;pointer&quot;: &quot;agent.attach_receipts&quot;,
+      &quot;receipt_id&quot;: &quot;receipt-c9317151-775a-4e4e-9843-069a7b5c3216&quot;,
+      &quot;resolved_at&quot;: &quot;2026-05-07T16:31:50.548814+00:00&quot;,
+      &quot;resolver_version&quot;: &quot;0.1.0&quot;,
+      &quot;target_language&quot;: &quot;python&quot;,
+      &quot;type_signature&quot;: &quot;resolution -&gt; resolution&quot;
+    }
+  ]
 }</code></pre>
 </article>
 <article class="event">
@@ -257,42 +758,61 @@
     <div>
       <strong>evt-0005 · agent.tool.proposed_call</strong>
       <p>Preflight drifted email send after guardrails disappear.</p>
+      <div class="chips"><span class="chip">diff: high</span><span class="chip">policy: 1</span><span class="chip">receipts: 1</span></div>
     </div>
     <span class="badge blocked">blocked</span>
   </header>
   <pre><code>{
-  &quot;event_id&quot;: &quot;evt-0005&quot;,
-  &quot;parent_event_id&quot;: &quot;evt-0004&quot;,
-  &quot;event_type&quot;: &quot;agent.tool.proposed_call&quot;,
   &quot;actor&quot;: &quot;openclaw-support-agent&quot;,
-  &quot;payload_hash&quot;: &quot;36992a755001e149449e20b063b427674cc38ccce00737d7027f7190637205ca&quot;,
   &quot;contract_hash&quot;: &quot;69465421e59543e80961fd8cf43da68d44f4a90995a8f390de95bb62d0fa4f1e&quot;,
+  &quot;event_hash&quot;: &quot;a39ac7bbd18464e049549e05b4694889e7418e82c4d34a7c73afac94b5146db8&quot;,
+  &quot;event_id&quot;: &quot;evt-0005&quot;,
+  &quot;event_type&quot;: &quot;agent.tool.proposed_call&quot;,
+  &quot;parent_event_id&quot;: &quot;evt-0004&quot;,
+  &quot;payload_hash&quot;: &quot;36992a755001e149449e20b063b427674cc38ccce00737d7027f7190637205ca&quot;,
   &quot;policy_findings&quot;: [
     {
-      &quot;severity&quot;: &quot;warning&quot;,
       &quot;code&quot;: &quot;RAW_EXECUTION_DENIED&quot;,
-      &quot;message&quot;: &quot;Policy permits resolution only; resolved implementation strings must not be executed directly.&quot;
+      &quot;message&quot;: &quot;Policy permits resolution only; resolved implementation strings must not be executed directly.&quot;,
+      &quot;severity&quot;: &quot;warning&quot;
+    }
+  ],
+  &quot;previous_contract_hash&quot;: &quot;0ea486f6e6053cf3287090d1471949eac63d3bb077cd8fa915b60a1709bb85fd&quot;,
+  &quot;receipt_ids&quot;: [
+    &quot;receipt-a5123728-5fb3-4064-be9f-62ecb626d1dc&quot;
+  ],
+  &quot;receipts&quot;: [
+    {
+      &quot;artifact_repo&quot;: &quot;waynesatz/agent-pidgin-data&quot;,
+      &quot;artifact_revision&quot;: &quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;,
+      &quot;catalog_hash&quot;: &quot;effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107&quot;,
+      &quot;catalog_id&quot;: &quot;communications&quot;,
+      &quot;catalog_version&quot;: &quot;0.1.0&quot;,
+      &quot;implementation&quot;: &quot;lambda message: {&#x27;action&#x27;: &#x27;send_external_message&#x27;, &#x27;requires_approval&#x27;: True, &#x27;message&#x27;: message}&quot;,
+      &quot;implementation_hash&quot;: &quot;b07196f97541fbee4fcd9d90ab9a29fe043c284d22cbbba1fca9f3ad617a8140&quot;,
+      &quot;pointer&quot;: &quot;comm.send_external_message&quot;,
+      &quot;receipt_id&quot;: &quot;receipt-a5123728-5fb3-4064-be9f-62ecb626d1dc&quot;,
+      &quot;resolved_at&quot;: &quot;2026-05-07T16:31:50.549107+00:00&quot;,
+      &quot;resolver_version&quot;: &quot;0.1.0&quot;,
+      &quot;target_language&quot;: &quot;python&quot;,
+      &quot;type_signature&quot;: &quot;approved_message -&gt; send_request&quot;
     }
   ],
   &quot;semantic_diff&quot;: {
     &quot;added&quot;: [],
+    &quot;changed&quot;: [],
+    &quot;contract_changes&quot;: [],
     &quot;removed&quot;: [
       &quot;comm.draft_external_message&quot;,
       &quot;comm.require_recipient_verification&quot;,
       &quot;comm.require_human_approval&quot;,
       &quot;agent.attach_receipts&quot;
     ],
-    &quot;changed&quot;: [],
     &quot;risk_level&quot;: &quot;high&quot;,
     &quot;risk_notes&quot;: [
       &quot;Control guardrail removed from workflow: agent.attach_receipts&quot;
-    ],
-    &quot;contract_changes&quot;: []
-  },
-  &quot;receipt_ids&quot;: [
-    &quot;receipt-06a66e09-efb4-40d7-b2c3-354842fa123c&quot;
-  ],
-  &quot;event_hash&quot;: &quot;08541dc66e02db14d2120cf7d90b28bdf5d24e37d9457e67c6a076cb6a73bb8e&quot;
+    ]
+  }
 }</code></pre>
 </article>
 <article class="event">
@@ -300,31 +820,109 @@
     <div>
       <strong>evt-0006 · agent.shell.proposed_command</strong>
       <p>Preflight destructive shell command proposal with sandbox and approval controls.</p>
+      <div class="chips"><span class="chip">policy: 1</span><span class="chip">receipts: 5</span></div>
     </div>
     <span class="badge resolved">resolved</span>
   </header>
   <pre><code>{
-  &quot;event_id&quot;: &quot;evt-0006&quot;,
-  &quot;parent_event_id&quot;: &quot;evt-0005&quot;,
-  &quot;event_type&quot;: &quot;agent.shell.proposed_command&quot;,
   &quot;actor&quot;: &quot;openclaw-dev-agent&quot;,
-  &quot;payload_hash&quot;: &quot;dd4c94af3dc4900b81d0f10f5d07735bb580b3398a5612be62b0a0c89dfbcb62&quot;,
   &quot;contract_hash&quot;: &quot;933dceda77b77606c56757d0ca8ac7b06f95cfdd10e90ef82b9f6fab3c211e3f&quot;,
+  &quot;event_hash&quot;: &quot;4f33f58d5a988c23faeaf086c111361aad31d0d7404330e4b081e2f0c6f78e65&quot;,
+  &quot;event_id&quot;: &quot;evt-0006&quot;,
+  &quot;event_type&quot;: &quot;agent.shell.proposed_command&quot;,
+  &quot;parent_event_id&quot;: &quot;evt-0005&quot;,
+  &quot;payload_hash&quot;: &quot;dd4c94af3dc4900b81d0f10f5d07735bb580b3398a5612be62b0a0c89dfbcb62&quot;,
   &quot;policy_findings&quot;: [
     {
-      &quot;severity&quot;: &quot;warning&quot;,
       &quot;code&quot;: &quot;RAW_EXECUTION_DENIED&quot;,
-      &quot;message&quot;: &quot;Policy permits resolution only; resolved implementation strings must not be executed directly.&quot;
+      &quot;message&quot;: &quot;Policy permits resolution only; resolved implementation strings must not be executed directly.&quot;,
+      &quot;severity&quot;: &quot;warning&quot;
     }
   ],
   &quot;receipt_ids&quot;: [
-    &quot;receipt-981d3f3d-ac67-4934-8cc3-1fdd4ba0b849&quot;,
-    &quot;receipt-815cfe5b-e1e4-4acc-aa1a-3b0d4038aa49&quot;,
-    &quot;receipt-37ff6c9f-96ca-414f-bcef-287def70bd2c&quot;,
-    &quot;receipt-790d7629-d0af-49f9-9f6c-ee7e1317341c&quot;,
-    &quot;receipt-863329d5-c522-4c85-a6f3-b4ddd1ec8e80&quot;
+    &quot;receipt-caebacc9-8241-4dc7-8e40-6f1add199cb2&quot;,
+    &quot;receipt-692cc8a4-1f26-4635-bb94-eece92144d06&quot;,
+    &quot;receipt-68f77fea-09b7-4167-be1d-6f5036c958f1&quot;,
+    &quot;receipt-59eb8d63-cc0b-40ac-beb4-5ba5bedfbf79&quot;,
+    &quot;receipt-a827d792-f4d7-4976-bc29-d8f418b5edf8&quot;
   ],
-  &quot;event_hash&quot;: &quot;a057c6c915614b03a6b2e0bf297989f12cf243dfa51cea106af1cd0262731caf&quot;
+  &quot;receipts&quot;: [
+    {
+      &quot;artifact_repo&quot;: &quot;waynesatz/agent-pidgin-data&quot;,
+      &quot;artifact_revision&quot;: &quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;,
+      &quot;catalog_hash&quot;: &quot;effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107&quot;,
+      &quot;catalog_id&quot;: &quot;shell_ops&quot;,
+      &quot;catalog_version&quot;: &quot;0.1.0&quot;,
+      &quot;implementation&quot;: &quot;lambda request: {&#x27;action&#x27;: &#x27;propose_shell_command&#x27;, &#x27;execute&#x27;: False, &#x27;request&#x27;: request}&quot;,
+      &quot;implementation_hash&quot;: &quot;ac4f3dc7cded7bbfe15ae96cf68e95a502978dcafe4efbc2b80d5da204b78fec&quot;,
+      &quot;pointer&quot;: &quot;shell.propose_command&quot;,
+      &quot;receipt_id&quot;: &quot;receipt-caebacc9-8241-4dc7-8e40-6f1add199cb2&quot;,
+      &quot;resolved_at&quot;: &quot;2026-05-07T16:31:50.549391+00:00&quot;,
+      &quot;resolver_version&quot;: &quot;0.1.0&quot;,
+      &quot;target_language&quot;: &quot;python&quot;,
+      &quot;type_signature&quot;: &quot;command_request -&gt; command_proposal&quot;
+    },
+    {
+      &quot;artifact_repo&quot;: &quot;waynesatz/agent-pidgin-data&quot;,
+      &quot;artifact_revision&quot;: &quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;,
+      &quot;catalog_hash&quot;: &quot;effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107&quot;,
+      &quot;catalog_id&quot;: &quot;shell_ops&quot;,
+      &quot;catalog_version&quot;: &quot;0.1.0&quot;,
+      &quot;implementation&quot;: &quot;lambda request: {&#x27;sandbox_required&#x27;: True, &#x27;request&#x27;: request}&quot;,
+      &quot;implementation_hash&quot;: &quot;ca5685e6842c7f9fa93b11016990ca3768b365c17fc7221b81fb12858fb5be50&quot;,
+      &quot;pointer&quot;: &quot;shell.require_sandbox&quot;,
+      &quot;receipt_id&quot;: &quot;receipt-692cc8a4-1f26-4635-bb94-eece92144d06&quot;,
+      &quot;resolved_at&quot;: &quot;2026-05-07T16:31:50.549397+00:00&quot;,
+      &quot;resolver_version&quot;: &quot;0.1.0&quot;,
+      &quot;target_language&quot;: &quot;python&quot;,
+      &quot;type_signature&quot;: &quot;command_request -&gt; policy_requirement&quot;
+    },
+    {
+      &quot;artifact_repo&quot;: &quot;waynesatz/agent-pidgin-data&quot;,
+      &quot;artifact_revision&quot;: &quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;,
+      &quot;catalog_hash&quot;: &quot;effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107&quot;,
+      &quot;catalog_id&quot;: &quot;shell_ops&quot;,
+      &quot;catalog_version&quot;: &quot;0.1.0&quot;,
+      &quot;implementation&quot;: &quot;lambda request: {&#x27;blocked&#x27;: True, &#x27;reason&#x27;: &#x27;destructive command requires explicit policy override&#x27;, &#x27;request&#x27;: request}&quot;,
+      &quot;implementation_hash&quot;: &quot;679b2bfb6fd91f2984b8db01737048e77f258d2adc9824b8431d21b79f50e743&quot;,
+      &quot;pointer&quot;: &quot;shell.block_destructive_command&quot;,
+      &quot;receipt_id&quot;: &quot;receipt-68f77fea-09b7-4167-be1d-6f5036c958f1&quot;,
+      &quot;resolved_at&quot;: &quot;2026-05-07T16:31:50.549402+00:00&quot;,
+      &quot;resolver_version&quot;: &quot;0.1.0&quot;,
+      &quot;target_language&quot;: &quot;python&quot;,
+      &quot;type_signature&quot;: &quot;command_request -&gt; policy_finding&quot;
+    },
+    {
+      &quot;artifact_repo&quot;: &quot;waynesatz/agent-pidgin-data&quot;,
+      &quot;artifact_revision&quot;: &quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;,
+      &quot;catalog_hash&quot;: &quot;effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107&quot;,
+      &quot;catalog_id&quot;: &quot;shell_ops&quot;,
+      &quot;catalog_version&quot;: &quot;0.1.0&quot;,
+      &quot;implementation&quot;: &quot;lambda request: {&#x27;requires_human_approval&#x27;: True, &#x27;payload&#x27;: request}&quot;,
+      &quot;implementation_hash&quot;: &quot;ecbcf6bcdcedea52737028670a473f431dc9e262a254ec74262781d93c90361e&quot;,
+      &quot;pointer&quot;: &quot;shell.require_human_approval&quot;,
+      &quot;receipt_id&quot;: &quot;receipt-59eb8d63-cc0b-40ac-beb4-5ba5bedfbf79&quot;,
+      &quot;resolved_at&quot;: &quot;2026-05-07T16:31:50.549406+00:00&quot;,
+      &quot;resolver_version&quot;: &quot;0.1.0&quot;,
+      &quot;target_language&quot;: &quot;python&quot;,
+      &quot;type_signature&quot;: &quot;command_request -&gt; approval_request&quot;
+    },
+    {
+      &quot;artifact_repo&quot;: &quot;waynesatz/agent-pidgin-data&quot;,
+      &quot;artifact_revision&quot;: &quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;,
+      &quot;catalog_hash&quot;: &quot;effb46d519bd7c8f4ebaaea305eee7ef9afe79a86d473bfae442aa10b99bf107&quot;,
+      &quot;catalog_id&quot;: &quot;agent_ops&quot;,
+      &quot;catalog_version&quot;: &quot;0.1.0&quot;,
+      &quot;implementation&quot;: &quot;lambda resolution: resolution&quot;,
+      &quot;implementation_hash&quot;: &quot;49c937fbcd74790627a9979d746019f2e22c5f44ee1c8e79bd1882920b2c89b7&quot;,
+      &quot;pointer&quot;: &quot;agent.attach_receipts&quot;,
+      &quot;receipt_id&quot;: &quot;receipt-a827d792-f4d7-4976-bc29-d8f418b5edf8&quot;,
+      &quot;resolved_at&quot;: &quot;2026-05-07T16:31:50.549410+00:00&quot;,
+      &quot;resolver_version&quot;: &quot;0.1.0&quot;,
+      &quot;target_language&quot;: &quot;python&quot;,
+      &quot;type_signature&quot;: &quot;resolution -&gt; resolution&quot;
+    }
+  ]
 }</code></pre>
 </article>
     </section>

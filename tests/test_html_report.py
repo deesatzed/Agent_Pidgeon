@@ -42,7 +42,11 @@ class HtmlReportTests(unittest.TestCase):
         self.assertIn("UNPINNED_REVISION", report)
         self.assertIn("Receipt drilldown", report)
         self.assertIn("receipt-", report)
+        self.assertIn("&quot;catalog_id&quot;", report)
+        self.assertIn("&quot;implementation_hash&quot;", report)
         self.assertIn("Semantic diff and before/after", report)
+        self.assertIn("<strong>Previous contract</strong>", report)
+        self.assertIn("<strong>Proposed contract</strong>", report)
         self.assertIn("clinical.phi.scrub", report)
         self.assertIn("Control guardrail removed from workflow: agent.attach_receipts", report)
 

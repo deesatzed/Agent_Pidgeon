@@ -117,9 +117,12 @@ class FlightRecorder:
             "policy_findings": resolution.get("policy_findings", []),
             "resolution_status": str(resolution.get("status", "")),
             "receipt_ids": _receipt_ids(resolution),
+            "receipts": _receipts(resolution),
         }
         if semantic_diff is not None:
             event["semantic_diff"] = semantic_diff
+            event["previous_contract_hash"] = sha256_digest(previous_contract)
+            event["previous_contract"] = previous_contract
         return self._append_event(event)
 
     def record_skill_install(
@@ -258,6 +261,13 @@ def _receipt_ids(resolution: dict[str, Any]) -> list[str]:
     if not isinstance(receipts, list):
         return []
     return [str(receipt["receipt_id"]) for receipt in receipts if isinstance(receipt, dict) and "receipt_id" in receipt]
+
+
+def _receipts(resolution: dict[str, Any]) -> list[dict[str, Any]]:
+    receipts = resolution.get("resolution", {}).get("receipts", [])
+    if not isinstance(receipts, list):
+        return []
+    return [dict(receipt) for receipt in receipts if isinstance(receipt, dict)]
 
 
 def validate_trace_integrity(trace: dict[str, Any]) -> dict[str, str]:

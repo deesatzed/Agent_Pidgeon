@@ -107,6 +107,13 @@
         "contract": {
           "type": "object"
         },
+        "previous_contract_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "previous_contract": {
+          "type": "object"
+        },
         "skill_id": {
           "type": "string"
         },
@@ -127,6 +134,12 @@
           "type": "array",
           "items": {
             "type": "string"
+          }
+        },
+        "receipts": {
+          "type": "array",
+          "items": {
+            "type": "object"
           }
         },
         "semantic_diff": {

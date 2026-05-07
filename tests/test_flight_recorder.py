@@ -93,6 +93,9 @@ class FlightRecorderTests(unittest.TestCase):
         self.assertEqual(event["decision"], "resolved")
         self.assertEqual(event["resolution_status"], "resolved")
         self.assertEqual(len(event["receipt_ids"]), 6)
+        self.assertEqual(len(event["receipts"]), 6)
+        self.assertEqual(event["receipts"][0]["receipt_id"], event["receipt_ids"][0])
+        self.assertIn("catalog_id", event["receipts"][0])
         self.assertEqual(event["policy_findings"][0]["code"], "RAW_EXECUTION_DENIED")
 
     def test_skill_install_records_blocked_manifest_event(self) -> None:
@@ -135,6 +138,8 @@ class FlightRecorderTests(unittest.TestCase):
         self.assertEqual(event["decision"], "blocked")
         self.assertEqual(event["resolution_status"], "policy_failed")
         self.assertEqual(event["semantic_diff"]["risk_level"], "high")
+        self.assertIn("previous_contract_hash", event)
+        self.assertEqual(event["previous_contract"]["message_id"], safe_contract["message_id"])
         self.assertIn("clinical.phi.scrub", event["semantic_diff"]["removed"])
         self.assertIn("UNPINNED_REVISION", {finding["code"] for finding in event["policy_findings"]})
         self.assertEqual(trace["status"], "blocked")

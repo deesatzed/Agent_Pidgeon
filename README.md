@@ -27,7 +27,7 @@ Useful docs:
 - Resolution receipts with pointer, type signature, catalog ID/version/hash, implementation hash, artifact revision, resolver version, timestamp, and receipt ID.
 - CLI commands for validation, policy checks, resolution, catalog introspection, hashing, semantic diffing, and LLM-assisted authoring/review.
 - MCP-style receiver tools and A2A JSON wrapper examples.
-- Autonomous Agent Flight Recorder support for goals, memory updates, proposed tool calls, semantic drift, policy decisions, receipt IDs, and hash-chained traces.
+- Autonomous Agent Flight Recorder support for goals, memory updates, proposed tool calls, semantic drift, policy decisions, full resolution receipts, and hash-chained traces.
 - Dependency-free HTTP sidecar for local preflight gates before skill install, memory update, tool call, and trace rendering.
 - Catalog trust helpers for trusted catalog IDs, key revocation, pinned hashes, and HMAC-SHA256 signature verification.
 - Reproducible showpiece demos and automated tests.
@@ -173,7 +173,7 @@ Run the end-to-end OpenClaw-class sidecar showpiece:
 PYTHONPATH=src python3 examples/openclaw_class/run_openclaw_showpiece.py --out-dir /tmp/pidgeon-openclaw
 ```
 
-That writes a trace JSON file, a text replay, and a static HTML replay report.
+That writes a trace JSON file, a text replay, and a static HTML replay report with integrity status, grouped findings, receipt drilldown, and before/after drift panels.
 You can also export the same trace as OTLP-style JSON for telemetry ingestion:
 
 ```bash

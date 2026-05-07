@@ -5,7 +5,7 @@ Events: 6
 Blocked events: 3
 Semantic drift events: 2
 Receipts: 11
-Trace hash: 02682d41d3f56d9862a225e1f9e260b14775ee96fb3dfb0d86551c5857a538bd
+Trace hash: 5138a801dbc763b71a6d51d897f2a44d2ea3bdfeb77874561f0405615f5549ea
 
 Replay:
 - evt-0001 agent.goal.received [observed]: Handle a support escalation through Slack without unsafe external actions.

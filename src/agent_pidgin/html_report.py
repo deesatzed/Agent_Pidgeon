@@ -199,10 +199,12 @@ def _event_card(event: dict[str, Any]) -> str:
             "actor",
             "payload_hash",
             "contract_hash",
+            "previous_contract_hash",
             "skill_manifest_hash",
             "policy_findings",
             "semantic_diff",
             "receipt_ids",
+            "receipts",
             "event_hash",
         ]
         if key in event
@@ -261,6 +263,7 @@ def _receipt_section(events: list[dict[str, Any]]) -> str:
         receipt_ids = event.get("receipt_ids", [])
         if not receipt_ids:
             continue
+        receipts = event.get("receipts", [])
         receipt_chips = "".join(f'<span class="chip">{_escape(receipt_id)}</span>' for receipt_id in receipt_ids)
         hashes = [
             f"payload <code>{_escape(event['payload_hash'])}</code>",
@@ -268,12 +271,16 @@ def _receipt_section(events: list[dict[str, Any]]) -> str:
         ]
         if event.get("contract_hash"):
             hashes.insert(1, f"contract <code>{_escape(event['contract_hash'])}</code>")
+        if event.get("previous_contract_hash"):
+            hashes.insert(1, f"previous contract <code>{_escape(event['previous_contract_hash'])}</code>")
+        receipt_detail = _json(receipts) if receipts else _json(receipt_ids)
         rows.append(
             f"""<details class="receipt-row">
         <summary><strong>{_escape(event["event_id"])} · {_escape(event["event_type"])}</strong></summary>
         <span>{len(receipt_ids)} receipt ID{"s" if len(receipt_ids) != 1 else ""}</span>
         <div><div class="chips">{receipt_chips}</div>
-        <p class="muted">Bound to {"; ".join(hashes)}.</p></div>
+        <p class="muted">Bound to {"; ".join(hashes)}.</p>
+        <pre><code>{receipt_detail}</code></pre></div>
       </details>"""
         )
     if not rows:
@@ -300,11 +307,19 @@ def _semantic_diff_panel(event: dict[str, Any]) -> str:
     payload = event.get("payload", {})
     before = payload.get("before") if isinstance(payload, dict) else None
     after = payload.get("after") if isinstance(payload, dict) else None
+    before_label = "Before"
+    after_label = "After"
+    if before is None and event.get("previous_contract") is not None:
+        before = event.get("previous_contract")
+        before_label = "Previous contract"
+    if after is None and event.get("contract") is not None:
+        after = event.get("contract")
+        after_label = "Proposed contract"
     before_after = ""
     if before is not None or after is not None:
         before_after = f"""<div class="diff-grid">
-          <div class="diff-panel"><strong>Before</strong><pre><code>{_json(before)}</code></pre></div>
-          <div class="diff-panel"><strong>After</strong><pre><code>{_json(after)}</code></pre></div>
+          <div class="diff-panel"><strong>{_escape(before_label)}</strong><pre><code>{_json(before)}</code></pre></div>
+          <div class="diff-panel"><strong>{_escape(after_label)}</strong><pre><code>{_json(after)}</code></pre></div>
         </div>"""
     changes = {
         key: semantic_diff.get(key)
