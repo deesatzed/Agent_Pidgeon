@@ -46,6 +46,17 @@ Endpoints:
 
 Blocked preflights return HTTP `409` with the same JSON verdict body. Malformed payloads return HTTP `400`. The sidecar is preflight-only and has no endpoint for executing skills, tools, shell commands, or sends.
 
+Run the gateway adapter through the HTTP sidecar:
+
+```bash
+PYTHONPATH=src python examples/openclaw_gateway_adapter/run_adapter.py \
+  --mode http \
+  --sidecar-url http://127.0.0.1:8765 \
+  --json
+```
+
+In HTTP mode, each proposed effect is sent to the sidecar as an independent preflight. The gateway still owns enforcement and can add its own decision layer, such as turning a resolved external email contract into `requires_approval`.
+
 ## Deployment Pattern
 
 For a local or self-hosted OpenClaw-class agent, deploy Pidgeon in the same trust boundary as the gateway:

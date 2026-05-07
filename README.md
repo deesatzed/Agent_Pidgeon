@@ -181,6 +181,15 @@ Run the local HTTP preflight sidecar:
 PYTHONPATH=src python3 -m agent_pidgin.http_sidecar --host 127.0.0.1 --port 8765
 ```
 
+Then point the gateway adapter at it:
+
+```bash
+PYTHONPATH=src python3 examples/openclaw_gateway_adapter/run_adapter.py \
+  --mode http \
+  --sidecar-url http://127.0.0.1:8765 \
+  --json
+```
+
 Run the showpiece regression check used by CI:
 
 ```bash

@@ -32,6 +32,8 @@ class HttpSidecarTests(unittest.TestCase):
         self.assertEqual(health["execution_mode"], "preflight_only")
         self.assertEqual(blocked_status, 409)
         self.assertEqual(blocked["status"], "blocked")
+        self.assertEqual(blocked["event"]["event_type"], "agent.skill.proposed_install")
+        self.assertEqual(blocked["trace"]["summary"]["blocked_event_count"], 1)
 
     def test_router_preflights_memory_and_renders_trace(self) -> None:
         router = SidecarRouter()

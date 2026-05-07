@@ -10,7 +10,6 @@ from agent_pidgin.cli import contract_from_preflight_payload
 from agent_pidgin.flight_recorder import FlightRecorder, build_trace_report
 from agent_pidgin.html_report import build_trace_html
 from agent_pidgin.schema_validator import validate_pidgin_trace
-from agent_pidgin.skill_preflight import verify_skill_manifest
 from agent_pidgin.telemetry import build_otlp_trace_export
 
 
@@ -27,7 +26,7 @@ class SidecarRouter:
         body = payload or {}
         try:
             if path == "/v1/preflight/skill":
-                return _status_for_result(verify_skill_manifest(_manifest_from_payload(body)))
+                return _status_for_result(_preflight_skill(body))
             if path == "/v1/preflight/memory":
                 return _status_for_result(_preflight_memory(body))
             if path == "/v1/preflight/contract":
@@ -105,6 +104,18 @@ def _manifest_from_payload(payload: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(manifest, dict):
         raise ValueError("skill preflight requires a manifest object")
     return manifest
+
+
+def _preflight_skill(payload: dict[str, Any]) -> dict[str, Any]:
+    manifest = _manifest_from_payload(payload)
+    recorder = FlightRecorder(trace_id=str(payload.get("trace_id", "trace-http-sidecar-skill")))
+    event = recorder.record_skill_install(
+        actor=str(payload.get("actor", "openclaw-agent")),
+        summary=str(payload.get("summary", "HTTP sidecar skill preflight.")),
+        manifest=manifest,
+        payload={"install_mode": payload.get("install_mode", "proposed_only")},
+    )
+    return {"status": event["decision"], "event": event, "trace": recorder.trace()}
 
 
 def _preflight_memory(payload: dict[str, Any]) -> dict[str, Any]:

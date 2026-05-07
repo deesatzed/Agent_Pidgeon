@@ -5,6 +5,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+from agent_pidgin.http_sidecar import SidecarRouter
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -61,6 +63,31 @@ class OpenClawGatewayAdapterTests(unittest.TestCase):
         )
         self.assertGreaterEqual(trace["summary"]["blocked_event_count"], 2)
         self.assertIn("Agent Pidgeon Flight Recorder", result["report"])
+
+    def test_adapter_can_call_http_sidecar_transport_without_executing_effects(self) -> None:
+        module = load_adapter_module()
+        router = SidecarRouter()
+        client = module.HttpPidgeonSidecarClient(
+            base_url="http://sidecar.test",
+            post_json=lambda endpoint, payload: router.handle("POST", endpoint, payload),
+        )
+
+        result = module.run_adapter(mode="http", sidecar_client=client)
+
+        self.assertEqual(result["status"], "completed")
+        self.assertEqual(result["transport"], "http_sidecar")
+        self.assertEqual(result["sidecar_url"], "http://sidecar.test")
+        self.assertEqual(len(result["sidecar_results"]), 4)
+        self.assertTrue(all(verdict["executed"] is False for verdict in result["verdicts"]))
+        self.assertEqual(
+            {verdict["effect_type"]: verdict["gateway_decision"] for verdict in result["verdicts"]},
+            {
+                "skill_install": "blocked",
+                "memory_update": "blocked",
+                "external_tool_call": "requires_approval",
+                "shell_command": "blocked",
+            },
+        )
 
 
 if __name__ == "__main__":

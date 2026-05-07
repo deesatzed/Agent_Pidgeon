@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import urllib.error
+import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from agent_pidgin.cli import contract_from_preflight_payload
 from agent_pidgin.flight_recorder import FlightRecorder, build_trace_report
@@ -192,16 +194,7 @@ class AgentPidgeonGatewayAdapter:
         raise ValueError(f"Unsupported gateway effect: {effect.effect_type}")
 
     def _gateway_decision(self, effect: GatewayEffect, event: dict[str, Any]) -> str:
-        if event["decision"] == "blocked":
-            return "blocked"
-        contract_steps = effect.payload["contract"]["steps"]
-        if effect.effect_type == "external_tool_call" and "comm.require_human_approval" in contract_steps:
-            return "requires_approval"
-        if effect.effect_type == "shell_command" and _contains_destructive_command(effect.payload):
-            return "blocked"
-        if "shell.require_human_approval" in contract_steps:
-            return "requires_approval"
-        return event["decision"]
+        return _gateway_decision_for_effect(effect=effect, pidgin_decision=str(event["decision"]))
 
     def _verdict(self, effect: GatewayEffect, event: dict[str, Any], decision: str) -> dict[str, Any]:
         return {
@@ -215,17 +208,178 @@ class AgentPidgeonGatewayAdapter:
         }
 
 
-def run_adapter(output_dir: str | Path | None = None) -> dict[str, Any]:
-    result = AgentPidgeonGatewayAdapter().preflight_plan(OfflineOpenClawPlanner().plan())
-    if output_dir is not None:
-        target_dir = Path(output_dir)
-        target_dir.mkdir(parents=True, exist_ok=True)
+class HttpPidgeonSidecarClient:
+    def __init__(
+        self,
+        base_url: str = "http://127.0.0.1:8765",
+        post_json: Callable[[str, dict[str, Any]], tuple[int, dict[str, Any]]] | None = None,
+    ) -> None:
+        self.base_url = base_url.rstrip("/")
+        self.post_json = post_json or self._post_json
+
+    def preflight_effect(self, effect: GatewayEffect) -> dict[str, Any]:
+        endpoint, payload = _sidecar_request_for_effect(effect)
+        status_code, response = self.post_json(endpoint, payload)
+        if not isinstance(response, dict):
+            raise ValueError("sidecar response must be a JSON object")
+        response.setdefault("http_status", status_code)
+        return response
+
+    def _post_json(self, endpoint: str, payload: dict[str, Any]) -> tuple[int, dict[str, Any]]:
+        body = json.dumps(payload).encode("utf-8")
+        request = urllib.request.Request(
+            f"{self.base_url}{endpoint}",
+            data=body,
+            headers={"content-type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=10) as response:
+                return response.status, json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            return exc.code, json.loads(exc.read().decode("utf-8"))
+
+
+class AgentPidgeonHttpGatewayAdapter:
+    def __init__(self, sidecar_client: HttpPidgeonSidecarClient | None = None) -> None:
+        self.sidecar_client = sidecar_client or HttpPidgeonSidecarClient()
+
+    def preflight_plan(self, effects: list[GatewayEffect]) -> dict[str, Any]:
+        verdicts = []
+        sidecar_results = []
+        for effect in effects:
+            response = self.sidecar_client.preflight_effect(effect)
+            sidecar_results.append(_sidecar_result_summary(response))
+            verdicts.append(_http_verdict(effect=effect, response=response))
+        return {
+            "status": "completed",
+            "execution_mode": "preflight_only",
+            "transport": "http_sidecar",
+            "sidecar_url": self.sidecar_client.base_url,
+            "verdicts": verdicts,
+            "sidecar_results": sidecar_results,
+        }
+
+
+def _gateway_decision_for_effect(effect: GatewayEffect, pidgin_decision: str) -> str:
+    if pidgin_decision == "blocked":
+        return "blocked"
+    if effect.effect_type in {"external_tool_call", "shell_command"}:
+        contract_steps = effect.payload["contract"]["steps"]
+    else:
+        contract_steps = []
+    if effect.effect_type == "external_tool_call" and "comm.require_human_approval" in contract_steps:
+        return "requires_approval"
+    if effect.effect_type == "shell_command" and _contains_destructive_command(effect.payload):
+        return "blocked"
+    if "shell.require_human_approval" in contract_steps:
+        return "requires_approval"
+    return pidgin_decision
+
+
+def _http_verdict(effect: GatewayEffect, response: dict[str, Any]) -> dict[str, Any]:
+    pidgin_decision = str(response.get("status", "error"))
+    gateway_decision = _gateway_decision_for_effect(effect=effect, pidgin_decision=pidgin_decision)
+    event = response.get("event") if isinstance(response.get("event"), dict) else {}
+    return {
+        "effect_type": effect.effect_type,
+        "actor": effect.actor,
+        "event_id": str(event.get("event_id", "")),
+        "pidgin_decision": pidgin_decision,
+        "gateway_decision": gateway_decision,
+        "http_status": response.get("http_status"),
+        "executed": False,
+        "reason": _reason_for_decision(gateway_decision),
+    }
+
+
+def _sidecar_result_summary(response: dict[str, Any]) -> dict[str, Any]:
+    event = response.get("event") if isinstance(response.get("event"), dict) else {}
+    trace = response.get("trace") if isinstance(response.get("trace"), dict) else {}
+    summary = trace.get("summary") if isinstance(trace.get("summary"), dict) else {}
+    return {
+        "status": response.get("status"),
+        "http_status": response.get("http_status"),
+        "event_id": event.get("event_id"),
+        "event_type": event.get("event_type"),
+        "trace_id": trace.get("trace_id"),
+        "blocked_event_count": summary.get("blocked_event_count"),
+        "receipt_count": summary.get("receipt_count"),
+    }
+
+
+def _sidecar_request_for_effect(effect: GatewayEffect) -> tuple[str, dict[str, Any]]:
+    base_payload = {
+        "actor": effect.actor,
+        "summary": effect.summary,
+        "trace_id": f"trace-openclaw-http-{effect.effect_type}",
+    }
+    if effect.effect_type == "skill_install":
+        return "/v1/preflight/skill", {
+            **base_payload,
+            "manifest": effect.payload["manifest"],
+            "install_mode": effect.payload.get("install_mode", "proposed_only"),
+        }
+    if effect.effect_type == "memory_update":
+        return "/v1/preflight/memory", {
+            **base_payload,
+            "before": effect.payload["before"],
+            "after": effect.payload["after"],
+        }
+    if effect.effect_type in {"external_tool_call", "shell_command"}:
+        return "/v1/preflight/contract", {**effect.payload, **base_payload}
+    raise ValueError(f"Unsupported gateway effect: {effect.effect_type}")
+
+
+def _contains_destructive_command(payload: dict[str, Any]) -> bool:
+    argv = payload.get("proposed_command", {}).get("argv", [])
+    command = " ".join(str(part) for part in argv).lower()
+    destructive_markers = ("rm -rf", "git clean -xfd", "mkfs", "shutdown", "reboot", "npm run deploy")
+    return any(marker in command for marker in destructive_markers)
+
+
+def _reason_for_decision(decision: str) -> str:
+    if decision == "blocked":
+        return "Effect was not executed because Pidgeon or gateway policy found a blocking risk."
+    if decision == "requires_approval":
+        return "Effect was not executed because a human approval gate is required."
+    return "Effect was not executed because this adapter runs in preflight-only mode."
+
+
+def run_adapter(
+    output_dir: str | Path | None = None,
+    mode: str = "local",
+    sidecar_url: str = "http://127.0.0.1:8765",
+    sidecar_client: HttpPidgeonSidecarClient | None = None,
+) -> dict[str, Any]:
+    effects = OfflineOpenClawPlanner().plan()
+    if mode == "local":
+        result = AgentPidgeonGatewayAdapter().preflight_plan(effects)
+    elif mode == "http":
+        client = sidecar_client or HttpPidgeonSidecarClient(base_url=sidecar_url)
+        result = AgentPidgeonHttpGatewayAdapter(sidecar_client=client).preflight_plan(effects)
+    else:
+        raise ValueError(f"Unsupported adapter mode: {mode}")
+    _write_outputs(result=result, output_dir=output_dir)
+    return result
+
+
+def _write_outputs(result: dict[str, Any], output_dir: str | Path | None) -> None:
+    if output_dir is None:
+        return
+    target_dir = Path(output_dir)
+    target_dir.mkdir(parents=True, exist_ok=True)
+    (target_dir / "openclaw_gateway_adapter_result.json").write_text(
+        json.dumps(result, indent=2),
+        encoding="utf-8",
+    )
+    if result.get("trace"):
         (target_dir / "openclaw_gateway_adapter_trace.json").write_text(
             json.dumps(result["trace"], indent=2),
             encoding="utf-8",
         )
-        (target_dir / "openclaw_gateway_adapter_report.txt").write_text(result["report"], encoding="utf-8")
-    return result
+    if result.get("report"):
+        (target_dir / "openclaw_gateway_adapter_report.txt").write_text(str(result["report"]), encoding="utf-8")
 
 
 def _effect_payload_for_trace(effect: GatewayEffect) -> dict[str, Any]:
@@ -245,28 +399,15 @@ def _effect_payload_for_trace(effect: GatewayEffect) -> dict[str, Any]:
     }
 
 
-def _contains_destructive_command(payload: dict[str, Any]) -> bool:
-    argv = payload.get("proposed_command", {}).get("argv", [])
-    command = " ".join(str(part) for part in argv).lower()
-    destructive_markers = ("rm -rf", "git clean -xfd", "mkfs", "shutdown", "reboot", "npm run deploy")
-    return any(marker in command for marker in destructive_markers)
-
-
-def _reason_for_decision(decision: str) -> str:
-    if decision == "blocked":
-        return "Effect was not executed because Pidgeon or gateway policy found a blocking risk."
-    if decision == "requires_approval":
-        return "Effect was not executed because a human approval gate is required."
-    return "Effect was not executed because this adapter runs in preflight-only mode."
-
-
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run the offline OpenClaw-class Agent Pidgeon gateway adapter.")
+    parser = argparse.ArgumentParser(description="Run the OpenClaw-class Agent Pidgeon gateway adapter.")
+    parser.add_argument("--mode", choices=["local", "http"], default="local")
+    parser.add_argument("--sidecar-url", default="http://127.0.0.1:8765")
     parser.add_argument("--json", action="store_true", help="Print the complete adapter result as JSON.")
-    parser.add_argument("--out-dir", default=None, help="Write trace JSON and text replay to this directory.")
+    parser.add_argument("--out-dir", default=None, help="Write adapter outputs to this directory.")
     args = parser.parse_args()
 
-    result = run_adapter(output_dir=args.out_dir)
+    result = run_adapter(output_dir=args.out_dir, mode=args.mode, sidecar_url=args.sidecar_url)
     if args.json:
         print(json.dumps(result, indent=2))
         return
@@ -276,8 +417,9 @@ def main() -> None:
             f"{verdict['event_id']} {verdict['effect_type']}: "
             f"{verdict['gateway_decision']} executed={verdict['executed']}"
         )
-    print("")
-    print(result["report"])
+    if result.get("report"):
+        print("")
+        print(result["report"])
 
 
 if __name__ == "__main__":
