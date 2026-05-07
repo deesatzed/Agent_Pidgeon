@@ -1,0 +1,1143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agent Pidgin - Autonomous Agent Flight Recorder</title>
+  <meta
+    name="description"
+    content="Agent Pidgin is a deterministic semantic preflight and flight-recorder layer for autonomous agents."
+  >
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #15191f;
+      --muted: #5d6875;
+      --paper: #f7f8f6;
+      --surface: #ffffff;
+      --line: #d8ded9;
+      --deep: #18201c;
+      --green: #087f5b;
+      --green-soft: #dff3ea;
+      --red: #b42318;
+      --red-soft: #fbe4e2;
+      --gold: #936500;
+      --gold-soft: #fff1c2;
+      --cyan: #0e7490;
+      --cyan-soft: #d9f3f8;
+      --violet: #5b4b8a;
+      --shadow: 0 20px 60px rgba(21, 25, 31, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font: 16px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button,
+    a.button {
+      min-height: 44px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .button.primary {
+      color: white;
+      background: var(--green);
+      box-shadow: 0 10px 24px rgba(8, 127, 91, 0.22);
+    }
+
+    .button.secondary {
+      color: var(--deep);
+      background: rgba(255, 255, 255, 0.86);
+      border-color: rgba(21, 25, 31, 0.18);
+    }
+
+    .hero {
+      position: relative;
+      min-height: 92vh;
+      overflow: hidden;
+      color: white;
+      background: #111611;
+      display: grid;
+      align-items: center;
+      padding: 26px 22px 72px;
+    }
+
+    #flight-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(17, 22, 17, 0.72);
+      pointer-events: none;
+    }
+
+    .nav,
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      width: min(1160px, 100%);
+      margin: 0 auto;
+    }
+
+    .nav {
+      align-self: start;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      padding-bottom: 64px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+    }
+
+    .mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.32);
+      background: #087f5b;
+      box-shadow:
+        inset 10px 0 0 #f2b705,
+        inset -10px 0 0 #0e7490,
+        inset 0 -10px 0 #b42318;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a {
+      color: rgba(255, 255, 255, 0.8);
+      padding: 8px 10px;
+      border-radius: 8px;
+    }
+
+    .nav-links a:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    .eyebrow {
+      margin: 0 0 14px;
+      color: #d9f3f8;
+      font-weight: 800;
+      text-transform: uppercase;
+      font-size: 13px;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 860px;
+      font-size: 112px;
+      line-height: 0.92;
+      letter-spacing: 0;
+    }
+
+    .hero-copy {
+      max-width: 690px;
+      margin: 24px 0 0;
+      color: rgba(255, 255, 255, 0.84);
+      font-size: 20px;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .hero-proof {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(128px, 1fr));
+      gap: 10px;
+      max-width: 780px;
+      margin-top: 38px;
+    }
+
+    .proof-item {
+      border-top: 1px solid rgba(255, 255, 255, 0.28);
+      padding-top: 10px;
+    }
+
+    .proof-item strong {
+      display: block;
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .proof-item span {
+      color: rgba(255, 255, 255, 0.68);
+      font-size: 13px;
+    }
+
+    .below-hint {
+      position: absolute;
+      z-index: 2;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      color: rgba(255, 255, 255, 0.68);
+      font-size: 13px;
+    }
+
+    section {
+      padding: 74px 22px;
+    }
+
+    .wrap {
+      width: min(1160px, 100%);
+      margin: 0 auto;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 28px;
+      align-items: end;
+      margin-bottom: 28px;
+    }
+
+    .section-head h2 {
+      font-size: 56px;
+      line-height: 1;
+      letter-spacing: 0;
+      margin: 0;
+      max-width: 710px;
+    }
+
+    .section-head p {
+      max-width: 390px;
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .scenario {
+      background: var(--surface);
+    }
+
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: 0.94fr 1.06fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 10px;
+    }
+
+    .event-button {
+      width: 100%;
+      text-align: left;
+      background: #f6f8f7;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      color: var(--ink);
+      justify-content: start;
+      min-height: 72px;
+    }
+
+    .event-button[aria-pressed="true"] {
+      background: #fff;
+      border-color: var(--green);
+      box-shadow: var(--shadow);
+    }
+
+    .event-kicker {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .event-title {
+      display: block;
+      margin-top: 2px;
+      font-weight: 800;
+    }
+
+    .replay-panel {
+      background: #15191f;
+      color: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      min-height: 514px;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .replay-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 14px 16px;
+      background: #20261f;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 4px 9px;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .status.blocked {
+      color: #ffc8c2;
+      background: rgba(180, 35, 24, 0.2);
+      border: 1px solid rgba(255, 200, 194, 0.38);
+    }
+
+    .status.resolved {
+      color: #b7f7db;
+      background: rgba(8, 127, 91, 0.22);
+      border: 1px solid rgba(183, 247, 219, 0.34);
+    }
+
+    .status.observed {
+      color: #c4edf7;
+      background: rgba(14, 116, 144, 0.24);
+      border: 1px solid rgba(196, 237, 247, 0.34);
+    }
+
+    .replay-body {
+      padding: 18px;
+      display: grid;
+      align-content: start;
+      gap: 16px;
+    }
+
+    .hash-line {
+      color: rgba(255, 255, 255, 0.68);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .verdict {
+      display: grid;
+      grid-template-columns: 92px 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .verdict-meter {
+      aspect-ratio: 1;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      font-size: 28px;
+      font-weight: 900;
+      color: white;
+      background: var(--green);
+    }
+
+    .verdict-meter.blocked {
+      background: var(--red);
+    }
+
+    .verdict-meter.observed {
+      background: var(--cyan);
+    }
+
+    .verdict h3 {
+      margin: 0 0 6px;
+      font-size: 24px;
+      line-height: 1.1;
+    }
+
+    .verdict p {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.74);
+    }
+
+    .finding-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .finding {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 10px;
+      padding: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .finding code {
+      color: #f6d36b;
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .diff-strip {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .diff-box {
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      padding: 12px;
+      min-width: 0;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .diff-box strong {
+      display: block;
+      margin-bottom: 8px;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .pill {
+      border-radius: 999px;
+      padding: 4px 8px;
+      color: #18201c;
+      background: #dff3ea;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .pill.removed {
+      background: #ffc8c2;
+    }
+
+    .proof {
+      background: #eff4f2;
+    }
+
+    .proof-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .proof-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      min-height: 210px;
+    }
+
+    .proof-card h3 {
+      margin: 0 0 10px;
+      font-size: 21px;
+    }
+
+    .proof-card p {
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .proof-card .number {
+      display: block;
+      margin-bottom: 18px;
+      font-size: 44px;
+      line-height: 1;
+      font-weight: 900;
+      color: var(--green);
+    }
+
+    .difference {
+      background: var(--surface);
+    }
+
+    .compare {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .compare > div {
+      background: white;
+      padding: 18px;
+      min-height: 190px;
+    }
+
+    .compare h3 {
+      margin: 0 0 10px;
+    }
+
+    .compare p {
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .operator {
+      background: #15191f;
+      color: white;
+    }
+
+    .operator .section-head p {
+      color: rgba(255, 255, 255, 0.72);
+    }
+
+    .command-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    pre {
+      margin: 0;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      border-radius: 8px;
+      padding: 18px;
+      background: #0e1210;
+      color: #dff3ea;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      min-height: 100%;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 13px;
+    }
+
+    .operator-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .operator-step {
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 8px;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .operator-step strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .operator-step span {
+      color: rgba(255, 255, 255, 0.72);
+    }
+
+    .closing {
+      background: #f7f8f6;
+      padding-bottom: 86px;
+    }
+
+    .closing-box {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 24px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      padding: 26px;
+      box-shadow: var(--shadow);
+    }
+
+    .closing h2 {
+      margin: 0 0 8px;
+      font-size: 52px;
+      line-height: 1;
+    }
+
+    .closing p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 740px;
+    }
+
+    @media (max-width: 840px) {
+      .hero {
+        min-height: 94vh;
+        padding-bottom: 78px;
+      }
+
+      .hero::after {
+        background: rgba(17, 22, 17, 0.78);
+      }
+
+      .nav {
+        align-items: flex-start;
+        padding-bottom: 42px;
+      }
+
+      .nav-links {
+        justify-content: flex-end;
+      }
+
+      .hero-proof,
+      .scenario-grid,
+      .proof-grid,
+      .compare,
+      .command-grid,
+      .closing-box {
+        grid-template-columns: 1fr;
+      }
+
+      .section-head {
+        display: grid;
+      }
+
+      .replay-panel {
+        min-height: 0;
+      }
+
+      .verdict,
+      .finding,
+      .diff-strip {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 72px;
+      }
+
+      .section-head h2,
+      .closing h2 {
+        font-size: 42px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      body {
+        font-size: 15px;
+      }
+
+      .hero {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      .nav {
+        display: grid;
+        gap: 18px;
+      }
+
+      .nav-links {
+        justify-content: flex-start;
+      }
+
+      h1 {
+        font-size: 46px;
+      }
+
+      .section-head h2,
+      .closing h2 {
+        font-size: 34px;
+      }
+
+      .hero-copy {
+        font-size: 18px;
+      }
+
+      section {
+        padding: 56px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <canvas id="flight-canvas" aria-hidden="true"></canvas>
+    <nav class="nav" aria-label="Primary">
+      <a class="brand" href="#">
+        <span class="mark" aria-hidden="true"></span>
+        <span>Agent Pidgin</span>
+      </a>
+      <div class="nav-links">
+        <a href="#scenario">Showpiece</a>
+        <a href="#proof">Proof</a>
+        <a href="#difference">Why different</a>
+        <a href="#run">Run it</a>
+      </div>
+    </nav>
+    <div class="hero-content">
+      <p class="eyebrow">Autonomous Agent Flight Recorder</p>
+      <h1>Agent Pidgin</h1>
+      <p class="hero-copy">
+        Deterministic semantic preflight for agents with hands. It checks what a proposed action means, blocks unsafe drift, and leaves receipts an engineer can replay.
+      </p>
+      <div class="hero-actions">
+        <a class="button primary" href="#scenario">Watch the replay</a>
+        <a class="button secondary" href="#run">Run the showpiece</a>
+      </div>
+      <div class="hero-proof" aria-label="Current verified project metrics">
+        <div class="proof-item"><strong>6</strong><span>showpiece events</span></div>
+        <div class="proof-item"><strong>3</strong><span>blocked before execution</span></div>
+        <div class="proof-item"><strong>11</strong><span>resolution receipts</span></div>
+        <div class="proof-item"><strong>130</strong><span>tests passing</span></div>
+      </div>
+    </div>
+    <div class="below-hint">Scroll for the live replay</div>
+  </header>
+
+  <main>
+    <section class="scenario" id="scenario">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>The moment an agent drifts, Pidgin catches the meaning change.</h2>
+          <p>
+            This page uses the current OpenClaw-class showpiece: a support agent proposes a skill install, memory update, external email, unsafe drift, and shell command.
+          </p>
+        </div>
+        <div class="scenario-grid">
+          <div class="timeline" role="list" aria-label="Replay events">
+            <button class="event-button" type="button" data-event="0" aria-pressed="true">
+              <span>
+                <span class="event-kicker">evt-0001 observed</span>
+                <span class="event-title">Goal received from support channel</span>
+              </span>
+            </button>
+            <button class="event-button" type="button" data-event="1" aria-pressed="false">
+              <span>
+                <span class="event-kicker">evt-0002 blocked</span>
+                <span class="event-title">Unsigned skill asks for shell and credential access</span>
+              </span>
+            </button>
+            <button class="event-button" type="button" data-event="2" aria-pressed="false">
+              <span>
+                <span class="event-kicker">evt-0003 blocked</span>
+                <span class="event-title">Memory update weakens human review guardrails</span>
+              </span>
+            </button>
+            <button class="event-button" type="button" data-event="3" aria-pressed="false">
+              <span>
+                <span class="event-kicker">evt-0004 resolved</span>
+                <span class="event-title">External email keeps approval and receipt guardrails</span>
+              </span>
+            </button>
+            <button class="event-button" type="button" data-event="4" aria-pressed="false">
+              <span>
+                <span class="event-kicker">evt-0005 blocked</span>
+                <span class="event-title">Later email plan drops review and receipts</span>
+              </span>
+            </button>
+            <button class="event-button" type="button" data-event="5" aria-pressed="false">
+              <span>
+                <span class="event-kicker">evt-0006 resolved</span>
+                <span class="event-title">Shell proposal resolves only with sandbox controls</span>
+              </span>
+            </button>
+          </div>
+          <article class="replay-panel" aria-live="polite">
+            <div class="replay-top">
+              <strong id="panel-event">evt-0001</strong>
+              <span class="status observed" id="panel-status">observed</span>
+            </div>
+            <div class="replay-body">
+              <div class="hash-line" id="panel-hash">trace-openclaw-sidecar-001 / hash-chained</div>
+              <div class="verdict">
+                <div class="verdict-meter observed" id="panel-meter">OK</div>
+                <div>
+                  <h3 id="panel-title">Goal received from support channel</h3>
+                  <p id="panel-copy">The gateway captures a goal and a boundary: external sends require recipient verification, approval, and receipts.</p>
+                </div>
+              </div>
+              <div class="finding-list" id="panel-findings"></div>
+              <div class="diff-strip">
+                <div class="diff-box">
+                  <strong id="panel-before-label">Semantic pointers before</strong>
+                  <div class="pill-row" id="panel-before"></div>
+                </div>
+                <div class="diff-box">
+                  <strong id="panel-after-label">Semantic pointers after</strong>
+                  <div class="pill-row" id="panel-after"></div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="proof" id="proof">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Not vaporware. The showpiece already proves the core loop.</h2>
+          <p>It is a working deterministic resolver, policy gate, semantic diff engine, receipt generator, sidecar, and replay renderer.</p>
+        </div>
+        <div class="proof-grid">
+          <article class="proof-card">
+            <span class="number">47</span>
+            <h3>Trusted semantic pointers</h3>
+            <p>Catalogs cover communications, filesystem, shell, skills, memory, finance, clinical safety, and core transforms.</p>
+          </article>
+          <article class="proof-card">
+            <span class="number">3</span>
+            <h3>Blocked before execution</h3>
+            <p>The showpiece blocks a dangerous skill, memory guardrail drift, and unsafe email drift before the tool layer acts.</p>
+          </article>
+          <article class="proof-card">
+            <span class="number">11</span>
+            <h3>Receipts in one trace</h3>
+            <p>Resolution receipts bind pointers to catalog versions, catalog hashes, implementation hashes, and artifact revisions.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="difference" id="difference">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Pidgin is not telemetry and not a prompted auditor agent.</h2>
+          <p>The trust path is deterministic. LLMs can help author and explain, but they do not decide pointer truth.</p>
+        </div>
+        <div class="compare">
+          <div>
+            <h3>Telemetry</h3>
+            <p>Excellent for spans, logs, metrics, and latency. It usually records runtime behavior after a service does something.</p>
+          </div>
+          <div>
+            <h3>Auditor agent</h3>
+            <p>Useful for narrative review, but it is still a model opinion. The same prompt can drift across models, context, and time.</p>
+          </div>
+          <div>
+            <h3>Agent Pidgin</h3>
+            <p>Validates schema, enforces policy, resolves trusted catalogs, detects semantic drift, and emits replayable receipts.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="operator" id="run">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Run the showpiece from a fresh clone.</h2>
+          <p>The local demo writes trace JSON, a terminal replay, and a static HTML replay from the same hash-chained trace.</p>
+        </div>
+        <div class="command-grid">
+          <pre><code>git clone https://github.com/deesatzed/Agent_Pidgeon.git
+cd Agent_Pidgeon
+uv sync --python python3.13
+.venv/bin/python scripts/check_openclaw_showpiece.py
+.venv/bin/python examples/openclaw_class/run_openclaw_showpiece.py --out-dir /tmp/pidgeon-openclaw</code></pre>
+          <div class="operator-list">
+            <div class="operator-step">
+              <strong>1. Preflight</strong>
+              <span>The gateway asks Pidgin before skills, memory writes, tool calls, or shell commands run.</span>
+            </div>
+            <div class="operator-step">
+              <strong>2. Resolve</strong>
+              <span>Semantic pointers are resolved against trusted catalogs with deterministic receipts.</span>
+            </div>
+            <div class="operator-step">
+              <strong>3. Replay</strong>
+              <span>Operators inspect integrity, findings, receipts, and before/after drift panels.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="closing">
+      <div class="wrap">
+        <div class="closing-box">
+          <div>
+            <h2>Capability is not enough. Inspectability wins trust.</h2>
+            <p>
+              Agent Pidgin gives autonomous systems a deterministic meaning layer: before the action, during the audit, and after the incident review.
+            </p>
+          </div>
+          <a class="button primary" href="../examples/openclaw_class/golden/openclaw_trace.html">Open replay artifact</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const events = [
+      {
+        id: "evt-0001",
+        status: "observed",
+        meter: "OK",
+        title: "Goal received from support channel",
+        copy: "The gateway captures a goal and a boundary: external sends require recipient verification, approval, and receipts.",
+        hash: "trace-openclaw-sidecar-001 / hash-chained",
+        findings: [["BOUNDARY", "External sends require recipient verification, approval, and receipts."]],
+        beforeLabel: "Boundary",
+        afterLabel: "Recorded intent",
+        before: ["support-escalation", "slack-channel"],
+        after: ["recipient-verification", "human-approval", "receipts"]
+      },
+      {
+        id: "evt-0002",
+        status: "blocked",
+        meter: "NO",
+        title: "Unsigned skill asks for shell and credential access",
+        copy: "Pidgin blocks the proposed install before the local assistant can add a dangerous community skill.",
+        hash: "skill manifest hash verified in trace",
+        findings: [
+          ["UNSIGNED_SKILL", "Skill is not signed by a trusted publisher."],
+          ["DANGEROUS_SHELL_PERMISSION", "Requested shell access is too broad."],
+          ["DANGEROUS_CREDENTIAL_PERMISSION", "Credential file access is requested."]
+        ],
+        beforeLabel: "Requested permissions",
+        afterLabel: "Decision",
+        before: ["shell", "credentials", "secret paths"],
+        after: ["blocked", "recorded", "reviewable"]
+      },
+      {
+        id: "evt-0003",
+        status: "blocked",
+        meter: "NO",
+        title: "Memory update weakens human review guardrails",
+        copy: "A context or memory change tries to make external email easier. The semantic diff marks it high risk.",
+        hash: "memory before/after included in replay",
+        findings: [["MEMORY_DRIFT", "Guardrails weakened without approval."]],
+        beforeLabel: "Before",
+        afterLabel: "After",
+        before: ["external_email_allowed=false", "human_review_required=true", "may_read_secret_paths=false"],
+        after: ["external_email_allowed=true", "human_review_required=false", "may_read_secret_paths=true"]
+      },
+      {
+        id: "evt-0004",
+        status: "resolved",
+        meter: "OK",
+        title: "External email keeps approval and receipt guardrails",
+        copy: "The action can be represented as a compact contract that still includes recipient checks, approval, and receipts.",
+        hash: "5 receipts generated",
+        findings: [["RAW_EXECUTION_DENIED", "Resolved implementation strings are not executed by Pidgin."]],
+        beforeLabel: "Required pointers",
+        afterLabel: "Resolved pointers",
+        before: ["comm.require_recipient_verification", "comm.require_human_approval", "agent.attach_receipts"],
+        after: ["catalog hashes", "implementation hashes", "artifact revision"]
+      },
+      {
+        id: "evt-0005",
+        status: "blocked",
+        meter: "NO",
+        title: "Later email plan drops review and receipts",
+        copy: "The model claims everything is fine. Pidgin compares the contract and sees that safety meaning disappeared.",
+        hash: "previous contract hash + proposed contract hash",
+        findings: [
+          ["HIGH_RISK_DRIFT", "Control guardrails were removed."],
+          ["REMOVED_POINTER", "agent.request_human_review disappeared."],
+          ["REMOVED_POINTER", "agent.attach_receipts disappeared."]
+        ],
+        beforeLabel: "Previous contract",
+        afterLabel: "Proposed contract",
+        before: ["recipient verification", "human approval", "receipts", "external send"],
+        after: ["external send"]
+      },
+      {
+        id: "evt-0006",
+        status: "resolved",
+        meter: "OK",
+        title: "Shell proposal resolves only with sandbox controls",
+        copy: "Pidgin does not run the command. It verifies that the proposed command carries sandbox, destructive-command blocking, approval, and receipts.",
+        hash: "5 receipts generated",
+        findings: [["RAW_EXECUTION_DENIED", "Pidgin remains a semantic preflight layer, not an execution engine."]],
+        beforeLabel: "Proposed action",
+        afterLabel: "Required controls",
+        before: ["shell.propose_command"],
+        after: ["shell.require_sandbox", "shell.block_destructive_command", "shell.require_human_approval", "agent.attach_receipts"]
+      }
+    ];
+
+    const buttons = Array.from(document.querySelectorAll(".event-button"));
+    const panel = {
+      event: document.getElementById("panel-event"),
+      status: document.getElementById("panel-status"),
+      hash: document.getElementById("panel-hash"),
+      meter: document.getElementById("panel-meter"),
+      title: document.getElementById("panel-title"),
+      copy: document.getElementById("panel-copy"),
+      findings: document.getElementById("panel-findings"),
+      beforeLabel: document.getElementById("panel-before-label"),
+      afterLabel: document.getElementById("panel-after-label"),
+      before: document.getElementById("panel-before"),
+      after: document.getElementById("panel-after")
+    };
+
+    function setEvent(index) {
+      const event = events[index];
+      buttons.forEach((button, buttonIndex) => {
+        button.setAttribute("aria-pressed", String(buttonIndex === index));
+      });
+      panel.event.textContent = event.id;
+      panel.status.textContent = event.status;
+      panel.status.className = `status ${event.status}`;
+      panel.hash.textContent = event.hash;
+      panel.meter.textContent = event.meter;
+      panel.meter.className = `verdict-meter ${event.status}`;
+      panel.title.textContent = event.title;
+      panel.copy.textContent = event.copy;
+      panel.beforeLabel.textContent = event.beforeLabel;
+      panel.afterLabel.textContent = event.afterLabel;
+      panel.findings.innerHTML = event.findings.map(([code, text]) => (
+        `<div class="finding"><code>${escapeHtml(code)}</code><span>${escapeHtml(text)}</span></div>`
+      )).join("");
+      panel.before.innerHTML = event.before.map((item) => `<span class="pill">${escapeHtml(item)}</span>`).join("");
+      panel.after.innerHTML = event.after.map((item) => (
+        `<span class="pill ${event.status === "blocked" ? "removed" : ""}">${escapeHtml(item)}</span>`
+      )).join("");
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    buttons.forEach((button) => {
+      button.addEventListener("click", () => setEvent(Number(button.dataset.event)));
+    });
+
+    setEvent(0);
+
+    const canvas = document.getElementById("flight-canvas");
+    const ctx = canvas.getContext("2d");
+    let width = 0;
+    let height = 0;
+    let particles = [];
+    let pointerX = 0.7;
+    let pointerY = 0.4;
+
+    function resizeCanvas() {
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      width = canvas.clientWidth;
+      height = canvas.clientHeight;
+      canvas.width = Math.floor(width * ratio);
+      canvas.height = Math.floor(height * ratio);
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      particles = Array.from({ length: Math.max(38, Math.floor(width / 22)) }, (_, index) => ({
+        x: (index * 97) % Math.max(width, 1),
+        y: (index * 53) % Math.max(height, 1),
+        speed: 0.22 + (index % 7) * 0.045,
+        lane: index % 6,
+        size: 2 + (index % 4)
+      }));
+    }
+
+    function drawCanvas(time) {
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = "#111611";
+      ctx.fillRect(0, 0, width, height);
+
+      const lanes = [
+        height * 0.18,
+        height * 0.3,
+        height * 0.42,
+        height * 0.54,
+        height * 0.66,
+        height * 0.78
+      ];
+      const gateX = width * 0.64 + (pointerX - 0.5) * 24;
+      const gateY = height * 0.47 + (pointerY - 0.5) * 20;
+
+      ctx.lineWidth = 1;
+      lanes.forEach((laneY, index) => {
+        ctx.strokeStyle = index % 2 === 0 ? "rgba(217, 243, 248, 0.18)" : "rgba(223, 243, 234, 0.16)";
+        ctx.beginPath();
+        ctx.moveTo(width * 0.08, laneY);
+        ctx.bezierCurveTo(width * 0.34, laneY - 40, width * 0.46, gateY + (index - 2) * 18, gateX, gateY);
+        ctx.bezierCurveTo(width * 0.76, gateY - (index - 2) * 14, width * 0.86, laneY + 34, width * 0.98, laneY);
+        ctx.stroke();
+      });
+
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(246, 211, 107, 0.72)";
+      ctx.strokeRect(gateX - 58, gateY - 58, 116, 116);
+      ctx.strokeStyle = "rgba(8, 127, 91, 0.82)";
+      ctx.strokeRect(gateX - 42, gateY - 42, 84, 84);
+      ctx.fillStyle = "rgba(255, 255, 255, 0.86)";
+      ctx.font = "700 12px ui-monospace, Menlo, monospace";
+      ctx.fillText("POLICY", gateX - 24, gateY - 8);
+      ctx.fillText("CATALOG", gateX - 28, gateY + 12);
+
+      particles.forEach((particle, index) => {
+        particle.x += particle.speed * (1 + pointerX * 0.35);
+        if (particle.x > width + 24) particle.x = -24;
+        const laneY = lanes[particle.lane];
+        const wobble = Math.sin(time * 0.0012 + index) * 18;
+        const y = laneY + wobble;
+        const nearGate = Math.abs(particle.x - gateX) < 66 && Math.abs(y - gateY) < 82;
+        ctx.fillStyle = nearGate
+          ? (index % 5 === 0 ? "#ffb3aa" : "#dff3ea")
+          : (index % 3 === 0 ? "rgba(217, 243, 248, 0.66)" : "rgba(255, 241, 194, 0.62)");
+        ctx.beginPath();
+        ctx.rect(particle.x, y, particle.size * 4, particle.size);
+        ctx.fill();
+      });
+
+      requestAnimationFrame(drawCanvas);
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+    window.addEventListener("pointermove", (event) => {
+      pointerX = event.clientX / Math.max(window.innerWidth, 1);
+      pointerY = event.clientY / Math.max(window.innerHeight, 1);
+    });
+    resizeCanvas();
+    requestAnimationFrame(drawCanvas);
+  </script>
+</body>
+</html>

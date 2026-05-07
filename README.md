@@ -10,6 +10,7 @@ Agent Pidgin is not an execution engine, A2A clone, MCP clone, or generic observ
 
 Useful docs:
 
+- [Wow landing page](docs/landing.html)
 - [What Agent Pidgin does now](docs/what-agent-pidgin-will-do.md)
 - [Autonomous Agent Flight Recorder](docs/autonomous-agent-flight-recorder.md)
 - [Why this is not telemetry](docs/why-not-telemetry.md)
