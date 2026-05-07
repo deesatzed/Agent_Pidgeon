@@ -234,6 +234,23 @@ class CliTests(unittest.TestCase):
         self.assertEqual(stderr, "")
         self.assertIn("Agent Pidgeon Flight Recorder", stdout)
 
+    def test_render_trace_can_write_html_report(self) -> None:
+        recorder = FlightRecorder(trace_id="trace-cli-html")
+        recorder.record_event("agent.goal.received", "agent-a", "Receive goal.", {"goal": "test"})
+        with tempfile.TemporaryDirectory() as tmpdir:
+            trace_path = write_json(tmpdir, "trace.json", recorder.trace())
+            html_path = str(Path(tmpdir) / "trace.html")
+
+            code, stdout, stderr = self.invoke(["render-trace", trace_path, "--html-out", html_path, "--json"])
+
+            html_content = Path(html_path).read_text(encoding="utf-8")
+
+        result = json.loads(stdout)
+        self.assertEqual(code, 0)
+        self.assertEqual(stderr, "")
+        self.assertEqual(result["status"], "rendered")
+        self.assertIn("Agent Pidgeon Trace Replay", html_content)
+
 
 if __name__ == "__main__":
     unittest.main()

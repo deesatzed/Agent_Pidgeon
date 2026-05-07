@@ -247,7 +247,7 @@ Target CLI:
 agent-pidgin preflight-tool examples/openclaw/email_send_contract.json --json
 agent-pidgin record-memory-update examples/openclaw/memory_drift.json --json
 agent-pidgin verify-skill examples/openclaw/community_skill_manifest.json --json
-agent-pidgin render-trace trace.json
+agent-pidgin render-trace trace.json --html-out trace.html
 ```
 
 Target UI:
@@ -304,25 +304,47 @@ Flow:
 
 This is stronger than a generic agent demo because OpenClaw-class systems are local, popular, extensible, skill-driven, and connected to real channels.
 
-## Next Implementation Steps
+The full demo concept is captured in [openclaw-class-showpiece.md](openclaw-class-showpiece.md). It uses the current repo CLI surface:
 
-1. Add OpenClaw-class catalogs for communications, filesystem, shell, skills, memory, and finance.
-2. Add example contracts under `examples/openclaw_class/`.
-3. Add `record_skill_install` to `flight_recorder.py`.
-4. Add a local HTML replay report for the OpenClaw-class demo.
-5. Add OpenTelemetry export after the JSON trace stabilizes.
-6. Add docs showing sidecar deployment beside an OpenClaw Gateway.
-7. Add tests for malicious skill install, memory drift, external send, shell command proposal, and trace tampering.
+```bash
+agent-pidgin verify-skill examples/openclaw_class/dangerous_skill_manifest.json --json
+agent-pidgin record-memory-update examples/openclaw_class/memory_drift_payload.json --json
+agent-pidgin preflight-tool examples/openclaw_class/external_email_tool_contract.json --previous-contract examples/agent_flight_recorder_demo/safe_tool_contract.json --tool-name email.send_customer --json
+agent-pidgin render-trace trace.json --html-out trace.html
+```
 
-Implemented in the first sidecar pass:
+The runnable end-to-end showpiece is:
 
-- deterministic skill manifest schema
-- policy rules for signed publisher, dangerous permissions, external send, shell access, and credential paths
+```bash
+PYTHONPATH=src python3 examples/openclaw_class/run_openclaw_showpiece.py --out-dir /tmp/pidgeon-openclaw
+```
+
+It writes a trace JSON file, text replay, and local static HTML report from the same trace. The report shows the blocked dangerous skill install, blocked memory guardrail weakening, guarded external email preflight, later unsafe email drift block, shell-command proposal preflight, semantic diffs, policy findings, receipts, and trace hash without claiming that Pidgeon executed the tool.
+
+## Current Implementation Status
+
+Implemented in the sidecar pass:
+
+- OpenClaw-class catalogs for communications, filesystem, shell, skills, memory, and finance.
+- Example contracts and manifests under `examples/openclaw_class/`.
+- `record_skill_install` in `flight_recorder.py`.
+- Local HTML replay reports through `render-trace --html-out` and the runnable showpiece script.
+- Tests for malicious skill install, memory drift, external send, shell command proposal, trace rendering, and trace tampering.
 - CLI commands:
   - `preflight-tool`
   - `record-memory-update`
   - `verify-skill`
   - `render-trace`
+
+## Next Implementation Steps
+
+1. Add an OpenClaw Gateway adapter example that calls Pidgeon before skill install, memory write, tool call, and shell execution.
+2. Add OpenTelemetry export from the stable trace JSON while keeping Pidgeon as the semantic authority.
+3. Expand the HTML replay with integrity status, finding groups, receipts drilldown, and before/after diff panels.
+4. Add trust-root configuration for signed catalogs, signed skill manifests, and key rotation.
+5. Prototype a Rust or Zig verifier/proxy for fast trace validation and low-latency sidecar deployment.
+6. Add golden showpiece artifacts to CI so the demo trace and replay cannot silently regress.
+7. Add deployment docs for running Pidgeon beside OpenClaw-class gateways, local desktop agents, and enterprise support bots.
 
 ## Boundary
 

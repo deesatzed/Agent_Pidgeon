@@ -95,6 +95,25 @@ class FlightRecorderTests(unittest.TestCase):
         self.assertEqual(len(event["receipt_ids"]), 6)
         self.assertEqual(event["policy_findings"][0]["code"], "RAW_EXECUTION_DENIED")
 
+    def test_skill_install_records_blocked_manifest_event(self) -> None:
+        recorder = FlightRecorder(trace_id="trace-test-skill")
+        manifest = json.loads(
+            (ROOT / "examples/openclaw_class/dangerous_skill_manifest.json").read_text(encoding="utf-8")
+        )
+
+        event = recorder.record_skill_install(
+            actor="openclaw-gateway",
+            summary="Preflight skill install.",
+            manifest=manifest,
+        )
+        trace = recorder.trace()
+
+        self.assertEqual(event["decision"], "blocked")
+        self.assertEqual(event["event_type"], "agent.skill.proposed_install")
+        self.assertEqual(event["skill_id"], "community/auto-invoice-helper")
+        self.assertIn("DANGEROUS_SHELL_PERMISSION", {finding["code"] for finding in event["policy_findings"]})
+        self.assertEqual(validate_trace_integrity(trace)["status"], "valid")
+
     def test_corrupted_contract_policy_failure_is_blocked_and_records_semantic_drift(self) -> None:
         recorder = FlightRecorder(trace_id="trace-test-003")
         safe_contract = json.loads(
@@ -175,12 +194,38 @@ class FlightRecorderDemoTests(unittest.TestCase):
         self.assertEqual(validate_trace_integrity(trace)["status"], "valid")
         self.assertIn("where the meaning changed", result["novice_expectations"]["why_you_want_it"])
 
+    def test_openclaw_showpiece_records_skill_memory_and_tool_events(self) -> None:
+        run_demo = load_openclaw_showpiece_demo()
+
+        result = run_demo()
+        trace = result["trace"]
+
+        validate_pidgin_trace(trace)
+        self.assertEqual(result["status"], "openclaw_showpiece_completed")
+        self.assertEqual(trace["status"], "blocked")
+        self.assertEqual(trace["summary"]["event_count"], 6)
+        self.assertGreaterEqual(trace["summary"]["blocked_event_count"], 3)
+        self.assertGreaterEqual(trace["summary"]["receipt_count"], 10)
+        self.assertEqual(validate_trace_integrity(trace)["status"], "valid")
+        self.assertIn("agent.skill.proposed_install", {event["event_type"] for event in trace["events"]})
+        self.assertIn("OpenClaw-Class Pidgeon Sidecar Replay", result["html_report"])
+
 
 def load_flight_recorder_demo():
     script_path = ROOT / "examples/agent_flight_recorder_demo/run_flight_recorder.py"
     spec = importlib.util.spec_from_file_location("flight_recorder_demo", script_path)
     if spec is None or spec.loader is None:
         raise RuntimeError("Could not load flight recorder demo script")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.run_demo
+
+
+def load_openclaw_showpiece_demo():
+    script_path = ROOT / "examples/openclaw_class/run_openclaw_showpiece.py"
+    spec = importlib.util.spec_from_file_location("openclaw_showpiece_demo", script_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("Could not load OpenClaw showpiece demo script")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module.run_demo

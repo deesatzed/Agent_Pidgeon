@@ -107,6 +107,13 @@
         "contract": {
           "type": "object"
         },
+        "skill_id": {
+          "type": "string"
+        },
+        "skill_manifest_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
         "policy_findings": {
           "type": "array",
           "items": {

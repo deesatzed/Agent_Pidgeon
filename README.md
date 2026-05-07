@@ -149,6 +149,14 @@ agent-pidgin verify-skill examples/openclaw_class/dangerous_skill_manifest.json 
 
 `preflight-tool` and `record-memory-update` return non-zero when a proposed action is blocked. `verify-skill` returns non-zero for blocked skill manifests.
 
+Run the end-to-end OpenClaw-class sidecar showpiece:
+
+```bash
+PYTHONPATH=src python3 examples/openclaw_class/run_openclaw_showpiece.py --out-dir /tmp/pidgeon-openclaw
+```
+
+That writes a trace JSON file, a text replay, and a static HTML replay report.
+
 ## Run the showpiece demo
 
 The showpiece demonstrates the intended product shape end to end: plain-language authoring, schema validation, policy findings, trusted catalog resolution, semantic diff risk review, and receipts.
@@ -188,7 +196,7 @@ The flight recorder trace is hash-chained. The demo also detects unapproved memo
 Render a saved trace:
 
 ```bash
-agent-pidgin render-trace trace.json
+agent-pidgin render-trace trace.json --html-out trace.html
 ```
 
 ## Run stdio A2A demo

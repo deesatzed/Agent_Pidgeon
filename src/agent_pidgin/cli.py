@@ -11,6 +11,7 @@ from agent_pidgin.config import PidginConfig
 from agent_pidgin.demo import LocalMountGateway, run_local_demo
 from agent_pidgin.flight_recorder import FlightRecorder, build_trace_report
 from agent_pidgin.hash_utils import hash_catalog_content
+from agent_pidgin.html_report import build_trace_html
 from agent_pidgin.llm_authoring import draft_contract, explain_contract, review_contract
 from agent_pidgin.policy import enforce_policy, findings_to_dicts, has_policy_errors, load_policy
 from agent_pidgin.protocol import PidginMessage
@@ -144,6 +145,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     render_trace = subparsers.add_parser("render-trace")
     render_trace.add_argument("trace_path")
+    render_trace.add_argument("--html-out", default=None)
     render_trace.add_argument("--json", action="store_true")
     render_trace.set_defaults(func=cmd_render_trace)
 
@@ -302,11 +304,18 @@ def cmd_render_trace(args: argparse.Namespace) -> dict[str, Any] | str:
     trace = read_json(args.trace_path)
     validate_pidgin_trace(trace)
     report = build_trace_report(trace)
+    html_path = None
+    if args.html_out:
+        html_path = Path(args.html_out)
+        html_path.write_text(build_trace_html(trace), encoding="utf-8")
     if args.json:
-        return {
+        result = {
             "status": "rendered",
             "report": report,
         }
+        if html_path is not None:
+            result["html_path"] = str(html_path)
+        return result
     return report
 
 

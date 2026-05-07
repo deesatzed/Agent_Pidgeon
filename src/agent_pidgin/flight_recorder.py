@@ -13,6 +13,7 @@ from agent_pidgin.policy import PidginPolicy, load_policy
 from agent_pidgin.schema_validator import validate_pidgin_message, validate_pidgin_trace
 from agent_pidgin.semantic_diff import diff_contracts
 from agent_pidgin.service import PidginReceiverService
+from agent_pidgin.skill_preflight import verify_skill_manifest
 
 
 def utc_now() -> str:
@@ -119,6 +120,34 @@ class FlightRecorder:
         }
         if semantic_diff is not None:
             event["semantic_diff"] = semantic_diff
+        return self._append_event(event)
+
+    def record_skill_install(
+        self,
+        actor: str,
+        summary: str,
+        manifest: dict[str, Any],
+        parent_event_id: str | None = None,
+        payload: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        result = verify_skill_manifest(manifest)
+        decision = "blocked" if result["status"] == "blocked" else "resolved"
+        event_payload = payload or {}
+        event = {
+            "event_id": f"evt-{len(self.events) + 1:04d}",
+            "parent_event_id": parent_event_id,
+            "event_type": "agent.skill.proposed_install",
+            "actor": actor,
+            "timestamp": utc_now(),
+            "summary": summary,
+            "decision": decision,
+            "payload": event_payload,
+            "payload_hash": sha256_digest(event_payload),
+            "skill_manifest_hash": result["manifest_hash"],
+            "skill_id": result["skill_id"],
+            "policy_findings": result["findings"],
+            "receipt_ids": [],
+        }
         return self._append_event(event)
 
     def trace(self, status: str | None = None) -> dict[str, Any]:
