@@ -183,6 +183,108 @@ class CliTests(unittest.TestCase):
             os.environ.clear()
             os.environ.update(original)
 
+    def test_list_catalog_enforces_catalog_trust_root(self) -> None:
+        original = dict(os.environ)
+        try:
+            os.environ["AGENT_PIDGIN_CATALOG_HMAC_SECRET"] = "test-hmac-secret"
+            catalog = valid_catalog()
+            trust_root = {
+                "require_signature": True,
+                "trusted_catalog_ids": ["core"],
+                "trusted_key_ids": ["key-test-001"],
+                "revoked_key_ids": [],
+                "trusted_catalog_hashes": {"core": hash_catalog_content(catalog)},
+                "hmac_sha256_secrets": {"key-test-001": "test-hmac-secret"},
+            }
+            with tempfile.TemporaryDirectory() as tmpdir:
+                catalog_path = write_json(tmpdir, "catalog.json", catalog)
+                signed_path = str(Path(tmpdir) / "catalog.signed.json")
+                trust_path = write_json(tmpdir, "catalog-trust-root.json", trust_root)
+                self.invoke(
+                    [
+                        "sign-catalog-hmac",
+                        catalog_path,
+                        "--key-id",
+                        "key-test-001",
+                        "--out",
+                        signed_path,
+                        "--json",
+                    ]
+                )
+
+                code, stdout, stderr = self.invoke(
+                    [
+                        "list-catalog",
+                        "--catalog",
+                        signed_path,
+                        "--catalog-trust-root",
+                        trust_path,
+                        "--json",
+                    ]
+                )
+
+            result = json.loads(stdout)
+            self.assertEqual(code, 0)
+            self.assertEqual(stderr, "")
+            self.assertEqual(result["status"], "catalog_loaded")
+            self.assertEqual(result["pointers"], ["str.trim"])
+        finally:
+            os.environ.clear()
+            os.environ.update(original)
+
+    def test_resolve_blocks_untrusted_explicit_catalog_before_resolution(self) -> None:
+        original = dict(os.environ)
+        try:
+            os.environ["AGENT_PIDGIN_CATALOG_HMAC_SECRET"] = "test-hmac-secret"
+            catalog = valid_catalog()
+            trust_root = {
+                "require_signature": True,
+                "trusted_catalog_ids": ["core"],
+                "trusted_key_ids": ["key-test-001"],
+                "revoked_key_ids": [],
+                "trusted_catalog_hashes": {"core": hash_catalog_content(catalog)},
+                "hmac_sha256_secrets": {"key-test-001": "test-hmac-secret"},
+            }
+            with tempfile.TemporaryDirectory() as tmpdir:
+                catalog_path = write_json(tmpdir, "catalog.json", catalog)
+                signed_path = Path(tmpdir) / "catalog.signed.json"
+                trust_path = write_json(tmpdir, "catalog-trust-root.json", trust_root)
+                message_path = write_json(tmpdir, "message.json", valid_message())
+                self.invoke(
+                    [
+                        "sign-catalog-hmac",
+                        catalog_path,
+                        "--key-id",
+                        "key-test-001",
+                        "--out",
+                        str(signed_path),
+                        "--json",
+                    ]
+                )
+                signed_catalog = json.loads(signed_path.read_text(encoding="utf-8"))
+                signed_catalog["concepts"][0]["type_signature"] = "bytes -> bytes"
+                signed_path.write_text(json.dumps(signed_catalog), encoding="utf-8")
+
+                code, stdout, stderr = self.invoke(
+                    [
+                        "resolve",
+                        message_path,
+                        "--catalog",
+                        str(signed_path),
+                        "--catalog-trust-root",
+                        trust_path,
+                        "--json",
+                    ]
+                )
+
+            self.assertEqual(code, 1)
+            self.assertEqual(stdout, "")
+            self.assertIn("Catalog trust verification failed", stderr)
+            self.assertIn("CATALOG_SIGNATURE_INVALID", stderr)
+        finally:
+            os.environ.clear()
+            os.environ.update(original)
+
     def test_verify_catalog_trust_blocks_tampered_signed_catalog(self) -> None:
         original = dict(os.environ)
         try:

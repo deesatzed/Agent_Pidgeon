@@ -53,7 +53,14 @@ AGENT_PIDGIN_CATALOG_HMAC_SECRET="dev-only-example-secret-do-not-use-in-producti
 agent-pidgin verify-catalog-trust /tmp/core.signed.json \
   --trust-root examples/openclaw_class/catalog_trust_root.json \
   --json
+
+agent-pidgin list-catalog \
+  --catalog /tmp/core.signed.json \
+  --catalog-trust-root examples/openclaw_class/catalog_trust_root.json \
+  --json
 ```
+
+`--catalog-trust-root` can be used with catalog-consuming commands such as `list-catalog`, `show-pointer`, `resolve`, `diff`, `author-contract`, `explain-contract`, and `review-contract`. When an explicit catalog fails trust verification, the command fails before the catalog is used.
 
 ## Trust Metadata
 

@@ -64,6 +64,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     list_catalog = subparsers.add_parser("list-catalog")
     list_catalog.add_argument("--catalog", action="append", default=[])
+    list_catalog.add_argument("--catalog-trust-root", default=None)
     list_catalog.add_argument("--language", default=None)
     list_catalog.add_argument("--json", action="store_true")
     list_catalog.set_defaults(func=cmd_list_catalog)
@@ -71,12 +72,14 @@ def build_parser() -> argparse.ArgumentParser:
     show_pointer = subparsers.add_parser("show-pointer")
     show_pointer.add_argument("pointer")
     show_pointer.add_argument("--catalog", action="append", default=[])
+    show_pointer.add_argument("--catalog-trust-root", default=None)
     show_pointer.add_argument("--json", action="store_true")
     show_pointer.set_defaults(func=cmd_show_pointer)
 
     resolve = subparsers.add_parser("resolve")
     resolve.add_argument("path")
     resolve.add_argument("--catalog", action="append", default=[])
+    resolve.add_argument("--catalog-trust-root", default=None)
     resolve.add_argument("--policy", default=None)
     resolve.add_argument("--no-policy", action="store_true")
     resolve.add_argument("--json", action="store_true")
@@ -104,6 +107,7 @@ def build_parser() -> argparse.ArgumentParser:
     diff = subparsers.add_parser("diff")
     diff.add_argument("path")
     diff.add_argument("--catalog", action="append", default=[])
+    diff.add_argument("--catalog-trust-root", default=None)
     diff.add_argument("--json", action="store_true")
     diff.set_defaults(func=cmd_diff)
 
@@ -122,18 +126,21 @@ def build_parser() -> argparse.ArgumentParser:
     author_contract.add_argument("--sender-id", default="agent-a")
     author_contract.add_argument("--receiver-id", default="agent-b")
     author_contract.add_argument("--catalog", action="append", default=[])
+    author_contract.add_argument("--catalog-trust-root", default=None)
     author_contract.add_argument("--json", action="store_true")
     author_contract.set_defaults(func=cmd_author_contract)
 
     explain_contract_parser = subparsers.add_parser("explain-contract")
     explain_contract_parser.add_argument("path")
     explain_contract_parser.add_argument("--catalog", action="append", default=[])
+    explain_contract_parser.add_argument("--catalog-trust-root", default=None)
     explain_contract_parser.add_argument("--json", action="store_true")
     explain_contract_parser.set_defaults(func=cmd_explain_contract)
 
     review_contract_parser = subparsers.add_parser("review-contract")
     review_contract_parser.add_argument("path")
     review_contract_parser.add_argument("--catalog", action="append", default=[])
+    review_contract_parser.add_argument("--catalog-trust-root", default=None)
     review_contract_parser.add_argument("--json", action="store_true")
     review_contract_parser.set_defaults(func=cmd_review_contract)
 
@@ -386,8 +393,25 @@ def read_json(path: str | Path) -> Any:
 def load_catalog_from_args(args: argparse.Namespace) -> SeedCatalog:
     catalog_paths = getattr(args, "catalog", None) or []
     if catalog_paths:
+        _enforce_catalog_trust(catalog_paths, getattr(args, "catalog_trust_root", None))
         return SeedCatalog.from_files([Path(path) for path in catalog_paths])
     return SeedCatalog.load_default()
+
+
+def _enforce_catalog_trust(catalog_paths: list[str], trust_root_path: str | None) -> None:
+    if not trust_root_path:
+        return
+    trust_root = load_catalog_trust_root(trust_root_path)
+    blocked: list[str] = []
+    for catalog_path in catalog_paths:
+        catalog = read_json(catalog_path)
+        validate_catalog(catalog)
+        result = verify_catalog_trust(catalog, trust_root)
+        if result["status"] != "approved":
+            codes = ",".join(finding["code"] for finding in result.get("findings", []))
+            blocked.append(f"{catalog_path} ({codes})")
+    if blocked:
+        raise ValueError(f"Catalog trust verification failed: {'; '.join(blocked)}")
 
 
 def contract_from_preflight_payload(payload: dict[str, Any]) -> dict[str, Any]:
