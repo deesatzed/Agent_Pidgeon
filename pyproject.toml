@@ -15,6 +15,7 @@ agent-pidgin = "agent_pidgin.cli:main"
 agent-pidgin-demo = "agent_pidgin.cli:main"
 agent-pidgin-stdio-demo = "agent_pidgin.stdio_cli:main"
 agent-pidgin-receiver = "agent_pidgin.receiver_cli:main"
+agent-pidgin-sidecar = "agent_pidgin.http_sidecar:main"
 
 [tool.ruff]
 line-length = 120

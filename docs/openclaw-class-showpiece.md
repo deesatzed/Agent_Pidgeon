@@ -28,6 +28,8 @@ PYTHONPATH=src python3 scripts/check_openclaw_showpiece.py
 
 The check compares stable behavior: event sequence, decisions, summary counts, receipt counts, and required report phrases. It does not compare timestamps or hash-chain values byte for byte.
 
+The static HTML replay is dependency-free and expands the trace into reviewer-oriented sections for hash-chain integrity, grouped policy findings, per-event receipt IDs, and semantic diff before/after panels when the trace contains before/after payload data.
+
 Committed golden artifacts live in:
 
 - `examples/openclaw_class/golden/openclaw_trace.json`

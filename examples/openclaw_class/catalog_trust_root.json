@@ -1,0 +1,22 @@
+{
+  "require_signature": true,
+  "trusted_catalog_ids": [
+    "core",
+    "clinical_safety",
+    "agent_ops",
+    "communications",
+    "filesystem_ops",
+    "shell_ops",
+    "skill_marketplace",
+    "memory_ops",
+    "finance_ops"
+  ],
+  "trusted_key_ids": [
+    "key-agent-pidgeon-labs-2026-001",
+    "key-openclaw-ops-2026-001"
+  ],
+  "revoked_key_ids": [
+    "key-agent-pidgeon-labs-2025-001"
+  ],
+  "trusted_catalog_hashes": {}
+}

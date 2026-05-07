@@ -22,6 +22,30 @@ Run the offline example:
 PYTHONPATH=src python examples/openclaw_gateway_adapter/run_adapter.py --json
 ```
 
+## HTTP Sidecar
+
+Run the dependency-free local HTTP sidecar:
+
+```bash
+PYTHONPATH=src python -m agent_pidgin.http_sidecar --host 127.0.0.1 --port 8765
+```
+
+Installed environments can also use:
+
+```bash
+agent-pidgin-sidecar --host 127.0.0.1 --port 8765
+```
+
+Endpoints:
+
+- `GET /health`
+- `POST /v1/preflight/skill`
+- `POST /v1/preflight/memory`
+- `POST /v1/preflight/contract`
+- `POST /v1/render-trace`
+
+Blocked preflights return HTTP `409` with the same JSON verdict body. Malformed payloads return HTTP `400`. The sidecar is preflight-only and has no endpoint for executing skills, tools, shell commands, or sends.
+
 ## Deployment Pattern
 
 For a local or self-hosted OpenClaw-class agent, deploy Pidgeon in the same trust boundary as the gateway:

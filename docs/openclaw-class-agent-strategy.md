@@ -220,6 +220,12 @@ Pointers:
 - `finance.require_invoice_evidence`
 - `finance.block_payment_execution`
 
+### Catalog Trust Root
+
+OpenClaw-class deployments should keep catalog identity and key rotation metadata separate from skill trust metadata. The example root is `examples/openclaw_class/catalog_trust_root.json`.
+
+The foundation checks are deterministic: trusted catalog IDs, trusted signing key IDs, revoked key IDs, and pinned catalog hash matches. Cryptographic catalog signature verification is still a future boundary; current helpers report `signature_verification: "not_implemented"` so callers cannot confuse key-ID metadata checks with signature proof.
+
 ## Product UX
 
 The integration must be easy enough for a gateway developer to adopt in an afternoon.

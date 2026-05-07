@@ -28,6 +28,7 @@ Useful docs:
 - CLI commands for validation, policy checks, resolution, catalog introspection, hashing, semantic diffing, and LLM-assisted authoring/review.
 - MCP-style receiver tools and A2A JSON wrapper examples.
 - Autonomous Agent Flight Recorder support for goals, memory updates, proposed tool calls, semantic drift, policy decisions, receipt IDs, and hash-chained traces.
+- Dependency-free HTTP sidecar for local preflight gates before skill install, memory update, tool call, and trace rendering.
 - Reproducible showpiece demos and automated tests.
 
 ## Why a software engineer would want this
@@ -172,6 +173,12 @@ Run the offline OpenClaw-class gateway adapter:
 
 ```bash
 PYTHONPATH=src python3 examples/openclaw_gateway_adapter/run_adapter.py --json
+```
+
+Run the local HTTP preflight sidecar:
+
+```bash
+PYTHONPATH=src python3 -m agent_pidgin.http_sidecar --host 127.0.0.1 --port 8765
 ```
 
 Run the showpiece regression check used by CI:
