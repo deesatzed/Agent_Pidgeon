@@ -9,7 +9,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from agent_pidgin.catalog_trust import (
     catalog_trust_metadata,
     load_catalog_trust_root,
+    sign_catalog_hmac_sha256,
+    signed_catalog_content,
     verify_catalog_hash,
+    verify_catalog_hmac_signature,
     verify_catalog_trust,
     verify_catalog_trust_metadata,
 )
@@ -81,7 +84,7 @@ class CatalogTrustTests(unittest.TestCase):
         result = verify_catalog_trust_metadata(metadata, trust_root)
 
         self.assertEqual(result["status"], "approved")
-        self.assertEqual(result["signature_verification"], "not_implemented")
+        self.assertEqual(result["signature_verification"], "missing")
         self.assertEqual(self.finding_codes(result), {"SIGNATURE_CRYPTO_NOT_VERIFIED"})
         self.assertRegex(result["trust_root_hash"], r"^[a-f0-9]{64}$")
 
@@ -145,6 +148,52 @@ class CatalogTrustTests(unittest.TestCase):
 
         self.assertEqual(result["signing_key_id"], "key-agent-pidgeon-labs-001")
         self.assertEqual(result["status"], "approved")
+
+    def test_hmac_signature_verifies_signed_catalog(self) -> None:
+        catalog = self.catalog()
+        secret = "test-hmac-secret"
+        key_id = "key-agent-pidgeon-labs-001"
+        signed_catalog = signed_catalog_content(catalog, key_id=key_id, secret=secret)
+        trust_root = self.trust_root(catalog, key_id=key_id)
+        trust_root["hmac_sha256_secrets"] = {key_id: secret}
+
+        signature_result = verify_catalog_hmac_signature(signed_catalog, trust_root)
+        trust_result = verify_catalog_trust(signed_catalog, trust_root)
+
+        self.assertEqual(signature_result["status"], "verified")
+        self.assertEqual(trust_result["status"], "approved")
+        self.assertEqual(trust_result["signature_verification"], "verified")
+        self.assertEqual(self.finding_codes(trust_result), {"CATALOG_TRUST_METADATA_PASSED"})
+
+    def test_hmac_signature_blocks_tampered_catalog(self) -> None:
+        catalog = self.catalog()
+        secret = "test-hmac-secret"
+        key_id = "key-agent-pidgeon-labs-001"
+        signed_catalog = signed_catalog_content(catalog, key_id=key_id, secret=secret)
+        signed_catalog["concepts"][0]["type_signature"] = "bytes -> bytes"
+        trust_root = self.trust_root(catalog, key_id=key_id)
+        trust_root["hmac_sha256_secrets"] = {key_id: secret}
+
+        result = verify_catalog_trust(signed_catalog, trust_root)
+
+        self.assertEqual(result["status"], "blocked")
+        self.assertEqual(result["signature_verification"], "mismatched")
+        self.assertIn("CATALOG_SIGNATURE_INVALID", self.finding_codes(result))
+
+    def test_hmac_signature_requires_configured_verification_secret(self) -> None:
+        catalog = self.catalog()
+        key_id = "key-agent-pidgeon-labs-001"
+        metadata = catalog_trust_metadata(
+            catalog,
+            signature=sign_catalog_hmac_sha256(catalog, key_id=key_id, secret="test-hmac-secret"),
+        )
+        trust_root = self.trust_root(catalog, key_id=key_id)
+
+        result = verify_catalog_trust_metadata(metadata, trust_root)
+
+        self.assertEqual(result["status"], "blocked")
+        self.assertEqual(result["signature_verification"], "missing_key")
+        self.assertIn("SIGNATURE_VERIFICATION_KEY_MISSING", self.finding_codes(result))
 
     def test_load_catalog_trust_root_requires_json_object(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

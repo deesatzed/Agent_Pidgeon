@@ -224,7 +224,7 @@ Pointers:
 
 OpenClaw-class deployments should keep catalog identity and key rotation metadata separate from skill trust metadata. The example root is `examples/openclaw_class/catalog_trust_root.json`.
 
-The foundation checks are deterministic: trusted catalog IDs, trusted signing key IDs, revoked key IDs, and pinned catalog hash matches. Cryptographic catalog signature verification is still a future boundary; current helpers report `signature_verification: "not_implemented"` so callers cannot confuse key-ID metadata checks with signature proof.
+The foundation checks are deterministic: trusted catalog IDs, trusted signing key IDs, revoked key IDs, pinned catalog hash matches, and HMAC-SHA256 signature verification for local/shared-secret deployments. Public-key catalog signature verification is still a future boundary; unsupported algorithms report `signature_verification: "not_implemented"` so callers cannot confuse key-ID metadata checks with signature proof.
 
 ## Product UX
 
@@ -351,7 +351,7 @@ Implemented in the sidecar pass:
 
 1. Add an OpenClaw Gateway adapter example that calls Pidgeon before skill install, memory write, tool call, and shell execution.
 1. Expand the HTML replay with integrity status, finding groups, receipts drilldown, and before/after diff panels.
-2. Add catalog signing and key rotation on top of the current skill trust-root checks.
+2. Add public-key catalog signatures and key rotation on top of the current HMAC catalog trust checks.
 3. Prototype a Rust or Zig verifier/proxy for fast trace validation and low-latency sidecar deployment.
 4. Add a real HTTP or stdio sidecar server endpoint for the gateway adapter.
 5. Add packaged install instructions for local desktop agents and enterprise support bots.

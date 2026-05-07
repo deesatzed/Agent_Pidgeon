@@ -29,6 +29,7 @@ Useful docs:
 - MCP-style receiver tools and A2A JSON wrapper examples.
 - Autonomous Agent Flight Recorder support for goals, memory updates, proposed tool calls, semantic drift, policy decisions, receipt IDs, and hash-chained traces.
 - Dependency-free HTTP sidecar for local preflight gates before skill install, memory update, tool call, and trace rendering.
+- Catalog trust helpers for trusted catalog IDs, key revocation, pinned hashes, and HMAC-SHA256 signature verification.
 - Reproducible showpiece demos and automated tests.
 
 ## Why a software engineer would want this

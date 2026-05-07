@@ -43,14 +43,15 @@ agent-pidgin list-catalog --catalog catalogs/core.json --json
 
 ## Trust Metadata
 
-Catalog trust checks are deterministic metadata checks. They validate:
+Catalog trust checks are deterministic checks. They validate:
 
 - the catalog ID is in `trusted_catalog_ids`
 - the signing key ID is in `trusted_key_ids`
 - the signing key ID is not in `revoked_key_ids`
 - the catalog hash matches `trusted_catalog_hashes[catalog_id]` when pinned
+- HMAC-SHA256 catalog signatures when the trust root supplies an `hmac_sha256_secrets[key_id]` verifier secret
 
-The current boundary is explicit: `agent_pidgin.catalog_trust` does not perform cryptographic signature verification yet. A trusted key ID means the metadata names an allowed key; it does not prove the bytes were signed by that key until signature verification is added.
+The current asymmetric-signature boundary is explicit: `agent_pidgin.catalog_trust` does not perform public-key signature verification yet. It can verify HMAC-SHA256 signatures for local/shared-secret deployments. For other algorithms, a trusted key ID means the metadata names an allowed key; it does not prove the bytes were signed by that key.
 
 Trust roots use this shape:
 
@@ -62,6 +63,21 @@ Trust roots use this shape:
   "revoked_key_ids": ["key-agent-pidgeon-labs-2025-001"],
   "trusted_catalog_hashes": {
     "core": "expected-sha256-hex"
+  },
+  "hmac_sha256_secrets": {
+    "key-agent-pidgeon-labs-2026-001": "dev-only-example-secret"
+  }
+}
+```
+
+HMAC signatures bind the canonical catalog body with the `signature` field removed:
+
+```json
+{
+  "signature": {
+    "algorithm": "hmac-sha256",
+    "key_id": "key-agent-pidgeon-labs-2026-001",
+    "value": "hex-hmac-sha256"
   }
 }
 ```

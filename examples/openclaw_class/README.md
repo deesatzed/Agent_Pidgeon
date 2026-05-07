@@ -7,6 +7,7 @@ These fixtures show the kinds of payloads an OpenClaw-class gateway can send to 
 - `dangerous_skill_manifest.json` models an unsigned marketplace skill requesting shell, filesystem, network, and credential access.
 - `shell_command_proposal.json` models a proposed shell command that should be sandboxed and reviewed before execution.
 - `trust_root.json` models a local skill verification trust root with trusted publishers, trusted signing keys, and revoked keys.
+- `catalog_trust_root.json` models a local catalog trust root with trusted catalog IDs, key revocation, optional pinned hashes, and a dev-only HMAC verifier secret.
 - `golden/` contains the current reference trace, text report, and HTML replay for the showpiece.
 
 The files are examples only. They describe proposed actions and semantic contracts; they are not executable tool implementations.

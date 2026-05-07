@@ -18,5 +18,8 @@
   "revoked_key_ids": [
     "key-agent-pidgeon-labs-2025-001"
   ],
-  "trusted_catalog_hashes": {}
+  "trusted_catalog_hashes": {},
+  "hmac_sha256_secrets": {
+    "key-agent-pidgeon-labs-2026-001": "dev-only-example-secret-do-not-use-in-production"
+  }
 }
