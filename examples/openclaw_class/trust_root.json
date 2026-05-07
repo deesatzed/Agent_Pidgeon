@@ -1,0 +1,14 @@
+{
+  "require_signature": true,
+  "trusted_publishers": [
+    "trusted",
+    "agent-pidgeon-labs"
+  ],
+  "trusted_key_ids": [
+    "key-agent-pidgeon-labs-001",
+    "key-trusted-001"
+  ],
+  "revoked_key_ids": [
+    "key-compromised-2026-001"
+  ]
+}

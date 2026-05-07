@@ -222,6 +222,35 @@ class CliTests(unittest.TestCase):
         self.assertEqual(result["status"], "blocked")
         self.assertIn("DANGEROUS_SHELL_PERMISSION", {finding["code"] for finding in result["findings"]})
 
+    def test_verify_skill_accepts_trust_root(self) -> None:
+        manifest = {
+            "skill_id": "community/ticket-reader",
+            "name": "Ticket Reader",
+            "version": "0.1.0",
+            "publisher": {"id": "community", "name": "Community"},
+            "signed": True,
+            "signature": {"key_id": "key-community-001"},
+            "permissions": [{"kind": "network", "target": "tickets.internal", "access": "read"}],
+            "capabilities": ["json.parse"],
+        }
+        trust_root = {
+            "require_signature": True,
+            "trusted_publishers": ["trusted"],
+            "trusted_key_ids": ["key-trusted-001"],
+            "revoked_key_ids": [],
+        }
+        with tempfile.TemporaryDirectory() as tmpdir:
+            manifest_path = write_json(tmpdir, "skill.json", manifest)
+            trust_path = write_json(tmpdir, "trust-root.json", trust_root)
+
+            code, stdout, stderr = self.invoke(["verify-skill", manifest_path, "--trust-root", trust_path, "--json"])
+
+        result = json.loads(stdout)
+        self.assertEqual(code, 1)
+        self.assertEqual(stderr, "")
+        self.assertEqual(result["status"], "blocked")
+        self.assertIn("UNTRUSTED_PUBLISHER", {finding["code"] for finding in result["findings"]})
+
     def test_render_trace_prints_flight_recorder_report(self) -> None:
         recorder = FlightRecorder(trace_id="trace-cli-render")
         recorder.record_event("agent.goal.received", "agent-a", "Receive goal.", {"goal": "test"})
@@ -250,6 +279,24 @@ class CliTests(unittest.TestCase):
         self.assertEqual(stderr, "")
         self.assertEqual(result["status"], "rendered")
         self.assertIn("Agent Pidgeon Trace Replay", html_content)
+
+    def test_render_trace_can_write_otel_export(self) -> None:
+        recorder = FlightRecorder(trace_id="trace-cli-otel")
+        recorder.record_event("agent.goal.received", "agent-a", "Receive goal.", {"goal": "test"})
+        with tempfile.TemporaryDirectory() as tmpdir:
+            trace_path = write_json(tmpdir, "trace.json", recorder.trace())
+            otel_path = str(Path(tmpdir) / "trace-otel.json")
+
+            code, stdout, stderr = self.invoke(["render-trace", trace_path, "--otel-out", otel_path, "--json"])
+
+            otel_content = json.loads(Path(otel_path).read_text(encoding="utf-8"))
+
+        result = json.loads(stdout)
+        spans = otel_content["resourceSpans"][0]["scopeSpans"][0]["spans"]
+        self.assertEqual(code, 0)
+        self.assertEqual(stderr, "")
+        self.assertEqual(result["otel_path"], otel_path)
+        self.assertEqual(spans[0]["name"], "agent.goal.received")
 
 
 if __name__ == "__main__":

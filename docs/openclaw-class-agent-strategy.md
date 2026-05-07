@@ -319,7 +319,7 @@ The runnable end-to-end showpiece is:
 PYTHONPATH=src python3 examples/openclaw_class/run_openclaw_showpiece.py --out-dir /tmp/pidgeon-openclaw
 ```
 
-It writes a trace JSON file, text replay, and local static HTML report from the same trace. The report shows the blocked dangerous skill install, blocked memory guardrail weakening, guarded external email preflight, later unsafe email drift block, shell-command proposal preflight, semantic diffs, policy findings, receipts, and trace hash without claiming that Pidgeon executed the tool.
+It writes a trace JSON file, text replay, and local static HTML report from the same trace. The same trace can also be exported as OTLP-style JSON for telemetry ingestion with `render-trace --otel-out`. The report shows the blocked dangerous skill install, blocked memory guardrail weakening, guarded external email preflight, later unsafe email drift block, shell-command proposal preflight, semantic diffs, policy findings, receipts, and trace hash without claiming that Pidgeon executed the tool.
 
 ## Current Implementation Status
 
@@ -329,6 +329,11 @@ Implemented in the sidecar pass:
 - Example contracts and manifests under `examples/openclaw_class/`.
 - `record_skill_install` in `flight_recorder.py`.
 - Local HTML replay reports through `render-trace --html-out` and the runnable showpiece script.
+- OTLP-style JSON export through `render-trace --otel-out`, with Pidgeon trace JSON remaining the authority.
+- Skill trust-root checks through `verify-skill --trust-root`, including trusted publishers, trusted keys, and revoked keys.
+- Offline OpenClaw Gateway adapter example in `examples/openclaw_gateway_adapter/`.
+- Deployment guidance in [openclaw-sidecar-deployment.md](openclaw-sidecar-deployment.md).
+- Golden showpiece artifacts and CI check through `scripts/check_openclaw_showpiece.py`.
 - Tests for malicious skill install, memory drift, external send, shell command proposal, trace rendering, and trace tampering.
 - CLI commands:
   - `preflight-tool`
@@ -339,12 +344,11 @@ Implemented in the sidecar pass:
 ## Next Implementation Steps
 
 1. Add an OpenClaw Gateway adapter example that calls Pidgeon before skill install, memory write, tool call, and shell execution.
-2. Add OpenTelemetry export from the stable trace JSON while keeping Pidgeon as the semantic authority.
-3. Expand the HTML replay with integrity status, finding groups, receipts drilldown, and before/after diff panels.
-4. Add trust-root configuration for signed catalogs, signed skill manifests, and key rotation.
-5. Prototype a Rust or Zig verifier/proxy for fast trace validation and low-latency sidecar deployment.
-6. Add golden showpiece artifacts to CI so the demo trace and replay cannot silently regress.
-7. Add deployment docs for running Pidgeon beside OpenClaw-class gateways, local desktop agents, and enterprise support bots.
+1. Expand the HTML replay with integrity status, finding groups, receipts drilldown, and before/after diff panels.
+2. Add catalog signing and key rotation on top of the current skill trust-root checks.
+3. Prototype a Rust or Zig verifier/proxy for fast trace validation and low-latency sidecar deployment.
+4. Add a real HTTP or stdio sidecar server endpoint for the gateway adapter.
+5. Add packaged install instructions for local desktop agents and enterprise support bots.
 
 ## Boundary
 

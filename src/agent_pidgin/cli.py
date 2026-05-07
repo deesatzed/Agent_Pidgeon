@@ -18,7 +18,8 @@ from agent_pidgin.protocol import PidginMessage
 from agent_pidgin.schema_validator import validate_catalog, validate_pidgin_message, validate_pidgin_trace
 from agent_pidgin.semantic_diff import diff_payload
 from agent_pidgin.service import PidginReceiverService
-from agent_pidgin.skill_preflight import verify_skill_manifest
+from agent_pidgin.skill_preflight import load_skill_trust_root, verify_skill_manifest
+from agent_pidgin.telemetry import build_otlp_trace_export
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -140,12 +141,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     verify_skill = subparsers.add_parser("verify-skill")
     verify_skill.add_argument("manifest_path")
+    verify_skill.add_argument("--trust-root", default=None)
     verify_skill.add_argument("--json", action="store_true")
     verify_skill.set_defaults(func=cmd_verify_skill)
 
     render_trace = subparsers.add_parser("render-trace")
     render_trace.add_argument("trace_path")
     render_trace.add_argument("--html-out", default=None)
+    render_trace.add_argument("--otel-out", default=None)
     render_trace.add_argument("--json", action="store_true")
     render_trace.set_defaults(func=cmd_render_trace)
 
@@ -297,7 +300,8 @@ def cmd_record_memory_update(args: argparse.Namespace) -> dict[str, Any]:
 def cmd_verify_skill(args: argparse.Namespace) -> dict[str, Any]:
     payload = read_json(args.manifest_path)
     manifest = payload.get("manifest", payload) if isinstance(payload, dict) else payload
-    return verify_skill_manifest(manifest)
+    trust_root = load_skill_trust_root(args.trust_root) if args.trust_root else None
+    return verify_skill_manifest(manifest, trust_root=trust_root)
 
 
 def cmd_render_trace(args: argparse.Namespace) -> dict[str, Any] | str:
@@ -305,9 +309,13 @@ def cmd_render_trace(args: argparse.Namespace) -> dict[str, Any] | str:
     validate_pidgin_trace(trace)
     report = build_trace_report(trace)
     html_path = None
+    otel_path = None
     if args.html_out:
         html_path = Path(args.html_out)
         html_path.write_text(build_trace_html(trace), encoding="utf-8")
+    if args.otel_out:
+        otel_path = Path(args.otel_out)
+        otel_path.write_text(json.dumps(build_otlp_trace_export(trace), indent=2), encoding="utf-8")
     if args.json:
         result = {
             "status": "rendered",
@@ -315,6 +323,8 @@ def cmd_render_trace(args: argparse.Namespace) -> dict[str, Any] | str:
         }
         if html_path is not None:
             result["html_path"] = str(html_path)
+        if otel_path is not None:
+            result["otel_path"] = str(otel_path)
         return result
     return report
 

@@ -20,6 +20,53 @@ This writes:
 - `/tmp/pidgeon-openclaw/openclaw_trace.txt`
 - `/tmp/pidgeon-openclaw/openclaw_trace.html`
 
+The committed `examples/openclaw_class/golden/` directory stores the current reference outputs. CI runs:
+
+```bash
+PYTHONPATH=src python3 scripts/check_openclaw_showpiece.py
+```
+
+The check compares stable behavior: event sequence, decisions, summary counts, receipt counts, and required report phrases. It does not compare timestamps or hash-chain values byte for byte.
+
+Committed golden artifacts live in:
+
+- `examples/openclaw_class/golden/openclaw_trace.json`
+- `examples/openclaw_class/golden/openclaw_trace.txt`
+- `examples/openclaw_class/golden/openclaw_trace.html`
+
+## Golden CI Check
+
+The deterministic regression check is:
+
+```bash
+python scripts/check_openclaw_showpiece.py
+```
+
+The check runs `examples/openclaw_class/run_openclaw_showpiece.py` into a temporary directory, then validates both that fresh output and the committed golden artifacts. It does not compare files byte for byte because the runner regenerates timestamps, event hashes, trace hashes, and receipt UUIDs. Instead, it checks the semantic contract of the demo:
+
+- trace ID is `trace-openclaw-sidecar-001`
+- overall trace status is `blocked`
+- event count is 6
+- blocked event count is 3
+- semantic drift event count is 2
+- receipt count is 11
+- integrity summary is `hash_chained`
+- event decisions are `observed`, `blocked`, `blocked`, `resolved`, `blocked`, `resolved`
+- event receipt distribution is 0, 0, 0, 5, 1, 5
+- dangerous skill findings include unsigned skill, secret path, shell, broad access, and credential permission findings
+- memory drift is high risk and weakens external email, human review, and secret path guardrails
+- unsafe email drift is high risk and removes approval and receipt guardrails
+- shell proposal resolves only with sandbox, destructive-command blocking, approval, and receipt controls
+- text and HTML reports contain the key replay phrases reviewers should see
+
+To inspect fresh artifacts while running the same assertions:
+
+```bash
+python scripts/check_openclaw_showpiece.py --out-dir /tmp/pidgeon-openclaw-check
+```
+
+CI runs this check after the unit test suite in `.github/workflows/unittest.yml`.
+
 ## Scenario
 
 An OpenClaw-class support assistant is connected to a customer support inbox and a local skill marketplace.

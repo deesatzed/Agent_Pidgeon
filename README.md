@@ -145,9 +145,13 @@ agent-pidgin preflight-tool examples/agent_flight_recorder_demo/corrupted_tool_c
 
 agent-pidgin record-memory-update examples/openclaw_class/memory_drift_payload.json --json
 agent-pidgin verify-skill examples/openclaw_class/dangerous_skill_manifest.json --json
+agent-pidgin verify-skill examples/openclaw_class/dangerous_skill_manifest.json \
+  --trust-root examples/openclaw_class/trust_root.json \
+  --json
 ```
 
 `preflight-tool` and `record-memory-update` return non-zero when a proposed action is blocked. `verify-skill` returns non-zero for blocked skill manifests.
+`--trust-root` adds publisher, signing-key, and revocation checks to skill verification.
 
 Run the end-to-end OpenClaw-class sidecar showpiece:
 
@@ -156,6 +160,25 @@ PYTHONPATH=src python3 examples/openclaw_class/run_openclaw_showpiece.py --out-d
 ```
 
 That writes a trace JSON file, a text replay, and a static HTML replay report.
+You can also export the same trace as OTLP-style JSON for telemetry ingestion:
+
+```bash
+agent-pidgin render-trace /tmp/pidgeon-openclaw/openclaw_trace.json \
+  --html-out /tmp/pidgeon-openclaw/openclaw_trace.html \
+  --otel-out /tmp/pidgeon-openclaw/openclaw_trace.otel.json
+```
+
+Run the offline OpenClaw-class gateway adapter:
+
+```bash
+PYTHONPATH=src python3 examples/openclaw_gateway_adapter/run_adapter.py --json
+```
+
+Run the showpiece regression check used by CI:
+
+```bash
+PYTHONPATH=src python3 scripts/check_openclaw_showpiece.py
+```
 
 ## Run the showpiece demo
 
@@ -196,7 +219,7 @@ The flight recorder trace is hash-chained. The demo also detects unapproved memo
 Render a saved trace:
 
 ```bash
-agent-pidgin render-trace trace.json --html-out trace.html
+agent-pidgin render-trace trace.json --html-out trace.html --otel-out trace.otel.json
 ```
 
 ## Run stdio A2A demo
