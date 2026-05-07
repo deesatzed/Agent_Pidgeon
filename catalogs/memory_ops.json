@@ -1,0 +1,47 @@
+{
+  "catalog_id": "memory_ops",
+  "version": "0.1.0",
+  "description": "OpenClaw-class persistent memory update and drift guardrail pointers.",
+  "concepts": [
+    {
+      "pointer": "memory.propose_update",
+      "type_signature": "memory_change -> memory_update_proposal",
+      "description": "Represent a proposed persistent-memory update without committing it.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda change: {'action': 'propose_memory_update', 'committed': False, 'change': change}",
+        "javascript": "(change) => ({ action: 'propose_memory_update', committed: false, change })"
+      }
+    },
+    {
+      "pointer": "memory.block_guardrail_weakening",
+      "type_signature": "memory_change -> policy_finding",
+      "description": "Block memory changes that weaken safety, privacy, approval, or channel-boundary guardrails.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda change: {'blocked': True, 'reason': 'memory change weakens guardrails', 'change': change}",
+        "javascript": "(change) => ({ blocked: true, reason: 'memory change weakens guardrails', change })"
+      }
+    },
+    {
+      "pointer": "memory.require_approval_for_boundary_change",
+      "type_signature": "memory_change -> approval_request",
+      "description": "Require approval for memory changes that alter identity, channel, data, or permission boundaries.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda change: {'requires_human_approval': True, 'reason': 'memory boundary change', 'change': change}",
+        "javascript": "(change) => ({ requires_human_approval: true, reason: 'memory boundary change', change })"
+      }
+    },
+    {
+      "pointer": "memory.attach_change_receipt",
+      "type_signature": "memory_change -> memory_change_receipt",
+      "description": "Attach a receipt record to a proposed or accepted memory change.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda change: {'receipt_required': True, 'change': change}",
+        "javascript": "(change) => ({ receipt_required: true, change })"
+      }
+    }
+  ]
+}

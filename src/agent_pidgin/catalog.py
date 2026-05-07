@@ -40,6 +40,12 @@ DEFAULT_CATALOG_FILES = [
     CATALOG_ROOT / "core.json",
     CATALOG_ROOT / "clinical_safety.json",
     CATALOG_ROOT / "agent_ops.json",
+    CATALOG_ROOT / "communications.json",
+    CATALOG_ROOT / "filesystem_ops.json",
+    CATALOG_ROOT / "shell_ops.json",
+    CATALOG_ROOT / "skill_marketplace.json",
+    CATALOG_ROOT / "memory_ops.json",
+    CATALOG_ROOT / "finance_ops.json",
 ]
 
 

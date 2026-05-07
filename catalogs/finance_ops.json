@@ -1,0 +1,57 @@
+{
+  "catalog_id": "finance_ops",
+  "version": "0.1.0",
+  "description": "OpenClaw-class finance, procurement, and payment-execution guardrail pointers.",
+  "concepts": [
+    {
+      "pointer": "finance.verify_vendor_identity",
+      "type_signature": "payment_request -> vendor_verification",
+      "description": "Require vendor identity verification before finance actions proceed.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda request: {'vendor_identity_verification_required': True, 'request': request}",
+        "javascript": "(request) => ({ vendor_identity_verification_required: true, request })"
+      }
+    },
+    {
+      "pointer": "finance.block_bank_detail_change",
+      "type_signature": "payment_request -> policy_finding",
+      "description": "Block payment flows that include new or changed bank details.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda request: {'blocked': True, 'reason': 'bank detail changes require separate verification', 'request': request}",
+        "javascript": "(request) => ({ blocked: true, reason: 'bank detail changes require separate verification', request })"
+      }
+    },
+    {
+      "pointer": "finance.require_dual_approval",
+      "type_signature": "payment_request -> approval_request",
+      "description": "Require two independent approvals before a finance action proceeds.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda request: {'dual_approval_required': True, 'request': request}",
+        "javascript": "(request) => ({ dual_approval_required: true, request })"
+      }
+    },
+    {
+      "pointer": "finance.require_invoice_evidence",
+      "type_signature": "payment_request -> evidence_request",
+      "description": "Require invoice, purchase order, or approval evidence before finance action approval.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda request: {'invoice_evidence_required': True, 'request': request}",
+        "javascript": "(request) => ({ invoice_evidence_required: true, request })"
+      }
+    },
+    {
+      "pointer": "finance.block_payment_execution",
+      "type_signature": "payment_request -> policy_finding",
+      "description": "Block direct payment execution by an autonomous agent.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda request: {'blocked': True, 'reason': 'autonomous payment execution is not allowed', 'request': request}",
+        "javascript": "(request) => ({ blocked: true, reason: 'autonomous payment execution is not allowed', request })"
+      }
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "catalog_id": "filesystem_ops",
+  "version": "0.1.0",
+  "description": "OpenClaw-class filesystem preflight pointers for local assistant file access.",
+  "concepts": [
+    {
+      "pointer": "fs.read_user_file",
+      "type_signature": "file_request -> read_file_request",
+      "description": "Represent a proposed user-file read without performing the read.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda request: {'action': 'read_user_file', 'request': request}",
+        "javascript": "(request) => ({ action: 'read_user_file', request })"
+      }
+    },
+    {
+      "pointer": "fs.write_user_file",
+      "type_signature": "file_request -> write_file_request",
+      "description": "Represent a proposed user-file write without performing the write.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda request: {'action': 'write_user_file', 'requires_backup_or_diff': True, 'request': request}",
+        "javascript": "(request) => ({ action: 'write_user_file', requires_backup_or_diff: true, request })"
+      }
+    },
+    {
+      "pointer": "fs.delete_user_file",
+      "type_signature": "file_request -> delete_file_request",
+      "description": "Represent a proposed user-file deletion as a high-risk action.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda request: {'action': 'delete_user_file', 'requires_human_approval': True, 'request': request}",
+        "javascript": "(request) => ({ action: 'delete_user_file', requires_human_approval: true, request })"
+      }
+    },
+    {
+      "pointer": "fs.require_path_allowlist",
+      "type_signature": "file_request -> policy_requirement",
+      "description": "Require proposed file paths to match an approved workspace or allowlist.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda request: {'path_allowlist_required': True, 'request': request}",
+        "javascript": "(request) => ({ path_allowlist_required: true, request })"
+      }
+    },
+    {
+      "pointer": "fs.block_secret_paths",
+      "type_signature": "file_request -> policy_finding",
+      "description": "Block file operations that target common secret, credential, or key material paths.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda request: {'blocked': True, 'reason': 'secret path access is not allowed', 'request': request}",
+        "javascript": "(request) => ({ blocked: true, reason: 'secret path access is not allowed', request })"
+      }
+    }
+  ]
+}

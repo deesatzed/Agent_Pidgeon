@@ -1,0 +1,31 @@
+{
+  "event_type": "agent.shell.proposed_command",
+  "actor": "openclaw-dev-agent",
+  "channel": "discord:dev-ops",
+  "correlation_id": "openclaw-shell-001",
+  "contract": {
+    "steps": [
+      "shell.propose_command",
+      "shell.require_sandbox",
+      "shell.block_destructive_command",
+      "shell.require_human_approval",
+      "agent.attach_receipts"
+    ],
+    "target_language": "python"
+  },
+  "proposed_command": {
+    "cwd": "/srv/customer-app",
+    "argv": [
+      "bash",
+      "-lc",
+      "git clean -xfd && npm install && npm run deploy"
+    ],
+    "reason": "Reset local build artifacts and redeploy production service.",
+    "execution_mode": "proposed_only"
+  },
+  "policy_expectation": {
+    "decision": "requires_approval",
+    "sandbox_required": true,
+    "destructive_command_detected": true
+  }
+}

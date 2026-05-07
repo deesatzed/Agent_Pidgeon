@@ -1,0 +1,36 @@
+{
+  "event_type": "agent.tool.proposed_call",
+  "actor": "openclaw-support-agent",
+  "channel": "slack:support-escalations",
+  "tool_name": "email.send_customer",
+  "tool_contract_version": "2026-05-07",
+  "correlation_id": "openclaw-email-001",
+  "contract": {
+    "steps": [
+      "comm.draft_external_message",
+      "comm.require_recipient_verification",
+      "comm.require_human_approval",
+      "comm.send_external_message",
+      "agent.attach_receipts"
+    ],
+    "target_language": "python"
+  },
+  "proposed_call": {
+    "from": "support@example.com",
+    "to": [
+      {
+        "name": "Jordan Lee",
+        "email": "jordan.lee@customer.example"
+      }
+    ],
+    "subject": "Update on ticket SUP-1042",
+    "body": "Hi Jordan, we found the configuration issue and can apply the fix after you confirm the maintenance window.",
+    "attachments": [],
+    "send_mode": "external_delivery"
+  },
+  "policy_expectation": {
+    "decision": "requires_approval",
+    "recipient_verification_required": true,
+    "receipt_required": true
+  }
+}

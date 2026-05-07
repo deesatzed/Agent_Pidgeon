@@ -247,6 +247,7 @@ Target CLI:
 agent-pidgin preflight-tool examples/openclaw/email_send_contract.json --json
 agent-pidgin record-memory-update examples/openclaw/memory_drift.json --json
 agent-pidgin verify-skill examples/openclaw/community_skill_manifest.json --json
+agent-pidgin render-trace trace.json
 ```
 
 Target UI:
@@ -308,17 +309,20 @@ This is stronger than a generic agent demo because OpenClaw-class systems are lo
 1. Add OpenClaw-class catalogs for communications, filesystem, shell, skills, memory, and finance.
 2. Add example contracts under `examples/openclaw_class/`.
 3. Add `record_skill_install` to `flight_recorder.py`.
-4. Add deterministic skill manifest schema.
-5. Add policy rules for signed publisher, dangerous permissions, external send, shell access, and credential paths.
-6. Add CLI commands:
-   - `preflight-tool`
-   - `record-memory-update`
-   - `verify-skill`
-   - `render-trace`
-7. Add a local HTML replay report for the OpenClaw-class demo.
-8. Add OpenTelemetry export after the JSON trace stabilizes.
-9. Add docs showing sidecar deployment beside an OpenClaw Gateway.
-10. Add tests for malicious skill install, memory drift, external send, shell command proposal, and trace tampering.
+4. Add a local HTML replay report for the OpenClaw-class demo.
+5. Add OpenTelemetry export after the JSON trace stabilizes.
+6. Add docs showing sidecar deployment beside an OpenClaw Gateway.
+7. Add tests for malicious skill install, memory drift, external send, shell command proposal, and trace tampering.
+
+Implemented in the first sidecar pass:
+
+- deterministic skill manifest schema
+- policy rules for signed publisher, dangerous permissions, external send, shell access, and credential paths
+- CLI commands:
+  - `preflight-tool`
+  - `record-memory-update`
+  - `verify-skill`
+  - `render-trace`
 
 ## Boundary
 

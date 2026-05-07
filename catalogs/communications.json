@@ -1,0 +1,56 @@
+{
+  "catalog_id": "communications",
+  "version": "0.1.0",
+  "description": "OpenClaw-class communication preflight and external-send guardrail pointers.",
+  "concepts": [
+    {
+      "pointer": "comm.draft_external_message",
+      "type_signature": "message_request -> draft_message",
+      "description": "Prepare an external message draft without sending it.",
+      "implementations": {
+        "python": "lambda request: {'status': 'drafted', 'external_send': False, 'request': request}",
+        "javascript": "(request) => ({ status: 'drafted', external_send: false, request })"
+      }
+    },
+    {
+      "pointer": "comm.send_external_message",
+      "type_signature": "approved_message -> send_request",
+      "description": "Mark a proposed external message send as an action requiring a verified approval path.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda message: {'action': 'send_external_message', 'requires_approval': True, 'message': message}",
+        "javascript": "(message) => ({ action: 'send_external_message', requires_approval: true, message })"
+      }
+    },
+    {
+      "pointer": "comm.require_recipient_verification",
+      "type_signature": "message_request -> verification_request",
+      "description": "Require recipient identity and address verification before external delivery.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda request: {'recipient_verification_required': True, 'request': request}",
+        "javascript": "(request) => ({ recipient_verification_required: true, request })"
+      }
+    },
+    {
+      "pointer": "comm.block_sensitive_external_send",
+      "type_signature": "message_request -> policy_finding",
+      "description": "Block external sends that appear to include sensitive data until reviewed.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda request: {'blocked': True, 'reason': 'sensitive external send requires review', 'request': request}",
+        "javascript": "(request) => ({ blocked: true, reason: 'sensitive external send requires review', request })"
+      }
+    },
+    {
+      "pointer": "comm.require_human_approval",
+      "type_signature": "message_request -> approval_request",
+      "description": "Require human approval before an external communication action proceeds.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda request: {'requires_human_approval': True, 'payload': request}",
+        "javascript": "(request) => ({ requires_human_approval: true, payload: request })"
+      }
+    }
+  ]
+}

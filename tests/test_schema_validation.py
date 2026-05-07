@@ -9,6 +9,7 @@ from agent_pidgin.schema_validator import (
     validate_pidgin_handshake,
     validate_pidgin_message,
     validate_pidgin_trace,
+    validate_skill_manifest,
 )
 
 
@@ -119,6 +120,28 @@ class SchemaValidationTests(unittest.TestCase):
                     }
                 ],
                 "trace_hash": "c" * 64,
+            }
+        )
+
+    def test_validate_skill_manifest_accepts_valid_manifest(self) -> None:
+        validate_skill_manifest(
+            {
+                "skill_id": "community/test-skill",
+                "name": "Test Skill",
+                "version": "0.1.0",
+                "publisher": {
+                    "id": "community",
+                    "name": "Community",
+                },
+                "signed": True,
+                "permissions": [
+                    {
+                        "kind": "email",
+                        "target": "customer",
+                        "access": "send",
+                    }
+                ],
+                "capabilities": ["comm.send_external_message"],
             }
         )
 

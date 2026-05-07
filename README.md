@@ -135,6 +135,20 @@ agent-pidgin author-contract examples/llm_authoring/plain_language_request.txt \
 
 LLM-assisted commands draft, explain, or review contracts. They do not define pointer truth and do not bypass schema validation.
 
+OpenClaw-class sidecar preflight commands are available for local gateways and skill-driven agents:
+
+```bash
+agent-pidgin preflight-tool examples/agent_flight_recorder_demo/corrupted_tool_contract.json \
+  --previous-contract examples/agent_flight_recorder_demo/safe_tool_contract.json \
+  --tool-name email.send_customer \
+  --json
+
+agent-pidgin record-memory-update examples/openclaw_class/memory_drift_payload.json --json
+agent-pidgin verify-skill examples/openclaw_class/dangerous_skill_manifest.json --json
+```
+
+`preflight-tool` and `record-memory-update` return non-zero when a proposed action is blocked. `verify-skill` returns non-zero for blocked skill manifests.
+
 ## Run the showpiece demo
 
 The showpiece demonstrates the intended product shape end to end: plain-language authoring, schema validation, policy findings, trusted catalog resolution, semantic diff risk review, and receipts.
@@ -170,6 +184,12 @@ PYTHONPATH=src python3 examples/agent_flight_recorder_demo/run_flight_recorder.p
 This demo shows a safe agent goal, a corrupted context update, and a later unsafe tool proposal. Pidgeon blocks the unsafe proposal and preserves the trace for replay.
 
 The flight recorder trace is hash-chained. The demo also detects unapproved memory guardrail weakening, high-risk semantic drift, removed control guardrails, and unpinned artifact revisions.
+
+Render a saved trace:
+
+```bash
+agent-pidgin render-trace trace.json
+```
 
 ## Run stdio A2A demo
 

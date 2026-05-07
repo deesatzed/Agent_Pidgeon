@@ -8,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from agent_pidgin.schema_validator import validate_pidgin_message
 from agent_pidgin.semantic_diff import diff_payload
+from agent_pidgin.skill_preflight import verify_skill_manifest
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -55,6 +56,25 @@ class ExampleTests(unittest.TestCase):
         self.assertEqual(len(result["resolution"]["resolved_steps"]), 6)
         self.assertEqual(len(result["resolution"]["receipts"]), 6)
         self.assertIn("SENSITIVE_POINTER_RECEIPTS_REQUIRED", {item["code"] for item in result["policy_findings"]})
+
+    def test_openclaw_class_skill_fixture_is_blocked_by_preflight(self) -> None:
+        manifest = json.loads(
+            (ROOT / "examples/openclaw_class/dangerous_skill_manifest.json").read_text(encoding="utf-8")
+        )
+
+        result = verify_skill_manifest(manifest)
+
+        self.assertEqual(result["status"], "blocked")
+        self.assertIn("DANGEROUS_SHELL_PERMISSION", {finding["code"] for finding in result["findings"]})
+
+    def test_openclaw_class_contract_fixtures_can_be_normalized_and_validated(self) -> None:
+        from agent_pidgin.cli import contract_from_preflight_payload
+
+        for fixture_name in ["external_email_tool_contract.json", "shell_command_proposal.json"]:
+            payload = json.loads((ROOT / f"examples/openclaw_class/{fixture_name}").read_text(encoding="utf-8"))
+            contract = contract_from_preflight_payload(payload)
+
+            validate_pidgin_message(contract)
 
 
 def load_resolve_sample_contract():

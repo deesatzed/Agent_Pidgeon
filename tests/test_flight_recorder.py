@@ -58,6 +58,25 @@ class FlightRecorderTests(unittest.TestCase):
         self.assertEqual(event["semantic_diff"]["risk_level"], "high")
         self.assertEqual(len(event["semantic_diff"]["risk_notes"]), 2)
 
+    def test_memory_update_detects_required_and_may_guardrail_names(self) -> None:
+        recorder = FlightRecorder(trace_id="trace-test-memory-names")
+
+        event = recorder.record_memory_update(
+            actor="agent-a",
+            summary="Try to weaken named memory guardrails.",
+            before={
+                "human_review_required_for_external_send": True,
+                "may_read_secret_paths": False,
+            },
+            after={
+                "human_review_required_for_external_send": False,
+                "may_read_secret_paths": True,
+            },
+        )
+
+        self.assertEqual(event["decision"], "blocked")
+        self.assertEqual(len(event["semantic_diff"]["risk_notes"]), 2)
+
     def test_contract_event_resolves_and_records_receipts(self) -> None:
         recorder = FlightRecorder(trace_id="trace-test-002")
         contract = json.loads(

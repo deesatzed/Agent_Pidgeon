@@ -9,13 +9,15 @@ from typing import Any
 from agent_pidgin.catalog import SeedCatalog
 from agent_pidgin.config import PidginConfig
 from agent_pidgin.demo import LocalMountGateway, run_local_demo
+from agent_pidgin.flight_recorder import FlightRecorder, build_trace_report
 from agent_pidgin.hash_utils import hash_catalog_content
 from agent_pidgin.llm_authoring import draft_contract, explain_contract, review_contract
 from agent_pidgin.policy import enforce_policy, findings_to_dicts, has_policy_errors, load_policy
 from agent_pidgin.protocol import PidginMessage
-from agent_pidgin.schema_validator import validate_catalog, validate_pidgin_message
+from agent_pidgin.schema_validator import validate_catalog, validate_pidgin_message, validate_pidgin_trace
 from agent_pidgin.semantic_diff import diff_payload
 from agent_pidgin.service import PidginReceiverService
+from agent_pidgin.skill_preflight import verify_skill_manifest
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -117,6 +119,34 @@ def build_parser() -> argparse.ArgumentParser:
     review_contract_parser.add_argument("--json", action="store_true")
     review_contract_parser.set_defaults(func=cmd_review_contract)
 
+    preflight_tool = subparsers.add_parser("preflight-tool")
+    preflight_tool.add_argument("contract_path")
+    preflight_tool.add_argument("--previous-contract", default=None)
+    preflight_tool.add_argument("--actor", default="openclaw-agent")
+    preflight_tool.add_argument("--tool-name", default="unknown")
+    preflight_tool.add_argument("--channel", default="local")
+    preflight_tool.add_argument("--summary", default="Preflight proposed tool call.")
+    preflight_tool.add_argument("--json", action="store_true")
+    preflight_tool.set_defaults(func=cmd_preflight_tool)
+
+    record_memory = subparsers.add_parser("record-memory-update")
+    record_memory.add_argument("path")
+    record_memory.add_argument("--actor", default="openclaw-agent")
+    record_memory.add_argument("--summary", default="Preflight proposed memory update.")
+    record_memory.add_argument("--approved-by", default=None)
+    record_memory.add_argument("--json", action="store_true")
+    record_memory.set_defaults(func=cmd_record_memory_update)
+
+    verify_skill = subparsers.add_parser("verify-skill")
+    verify_skill.add_argument("manifest_path")
+    verify_skill.add_argument("--json", action="store_true")
+    verify_skill.set_defaults(func=cmd_verify_skill)
+
+    render_trace = subparsers.add_parser("render-trace")
+    render_trace.add_argument("trace_path")
+    render_trace.add_argument("--json", action="store_true")
+    render_trace.set_defaults(func=cmd_render_trace)
+
     return parser
 
 
@@ -216,6 +246,70 @@ def cmd_review_contract(args: argparse.Namespace) -> dict[str, Any]:
     return review_contract(payload, catalog=load_catalog_from_args(args))
 
 
+def cmd_preflight_tool(args: argparse.Namespace) -> dict[str, Any]:
+    payload = read_json(args.contract_path)
+    contract = contract_from_preflight_payload(payload)
+    previous_contract = (
+        contract_from_preflight_payload(read_json(args.previous_contract)) if args.previous_contract else None
+    )
+    recorder = FlightRecorder()
+    event = recorder.record_contract_event(
+        event_type="agent.tool.proposed_call",
+        actor=args.actor,
+        summary=args.summary,
+        contract=contract,
+        previous_contract=previous_contract,
+        payload={
+            "tool_name": payload.get("tool_name", args.tool_name) if isinstance(payload, dict) else args.tool_name,
+            "channel": payload.get("channel", args.channel) if isinstance(payload, dict) else args.channel,
+        },
+    )
+    return {
+        "status": event["decision"],
+        "event": event,
+        "trace": recorder.trace(),
+    }
+
+
+def cmd_record_memory_update(args: argparse.Namespace) -> dict[str, Any]:
+    payload = read_json(args.path)
+    before = payload.get("before", payload.get("memory_before"))
+    after = payload.get("after", payload.get("memory_after"))
+    if not isinstance(before, dict) or not isinstance(after, dict):
+        raise ValueError("memory update payload must include object fields: before, after")
+    recorder = FlightRecorder()
+    event = recorder.record_memory_update(
+        actor=args.actor,
+        summary=str(payload.get("summary") or args.summary),
+        before=before,
+        after=after,
+        approved_by=args.approved_by or payload.get("approved_by"),
+    )
+    return {
+        "status": event["decision"],
+        "event": event,
+        "trace": recorder.trace(),
+    }
+
+
+def cmd_verify_skill(args: argparse.Namespace) -> dict[str, Any]:
+    payload = read_json(args.manifest_path)
+    manifest = payload.get("manifest", payload) if isinstance(payload, dict) else payload
+    return verify_skill_manifest(manifest)
+
+
+def cmd_render_trace(args: argparse.Namespace) -> dict[str, Any] | str:
+    trace = read_json(args.trace_path)
+    validate_pidgin_trace(trace)
+    report = build_trace_report(trace)
+    if args.json:
+        return {
+            "status": "rendered",
+            "report": report,
+        }
+    return report
+
+
 def read_json(path: str | Path) -> Any:
     with Path(path).open(encoding="utf-8") as payload_file:
         return json.load(payload_file)
@@ -228,6 +322,39 @@ def load_catalog_from_args(args: argparse.Namespace) -> SeedCatalog:
     return SeedCatalog.load_default()
 
 
+def contract_from_preflight_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    if "pidgin_version" in payload:
+        return payload
+    contract = payload.get("contract")
+    if not isinstance(contract, dict):
+        raise ValueError("preflight payload must be a Pidgin contract or include a contract object")
+    if "pidgin_version" in contract:
+        return contract
+    if "steps" not in contract:
+        raise ValueError("preflight contract object must include steps")
+    config = PidginConfig.from_env()
+    return {
+        "pidgin_version": "0.1",
+        "message_type": "resolve",
+        "message_id": str(payload.get("correlation_id", "msg-openclaw-preflight")),
+        "sender_id": str(payload.get("actor", "openclaw-agent")),
+        "receiver_id": "agent-pidgeon",
+        "target_language": str(contract.get("target_language", "python")),
+        "artifact": {
+            "kind": str(contract.get("artifact", {}).get("kind", config.artifact_kind)),
+            "repo": str(contract.get("artifact", {}).get("repo", config.artifact_repo)),
+            "revision": str(contract.get("artifact", {}).get("revision", "a" * 40)),
+        },
+        "steps": contract["steps"],
+        "created_at": str(payload.get("created_at", "2026-05-07T12:00:00Z")),
+        "metadata": {
+            "source": "openclaw_class_preflight",
+            "channel": payload.get("channel", "local"),
+            "tool_name": payload.get("tool_name", ""),
+        },
+    }
+
+
 def print_result(result: Any, as_json: bool) -> None:
     if as_json or isinstance(result, dict | list):
         print(json.dumps(result, indent=2))
@@ -237,6 +364,8 @@ def print_result(result: Any, as_json: bool) -> None:
 
 def _exit_code_for_result(result: Any) -> int:
     if isinstance(result, dict) and result.get("status") in {"error", "policy_failed"}:
+        return 1
+    if isinstance(result, dict) and result.get("status") == "blocked":
         return 1
     return 0
 

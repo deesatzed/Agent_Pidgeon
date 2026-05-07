@@ -48,9 +48,9 @@ Done:
 1. **OpenClaw-class sidecar**
    - Add catalogs for communications, filesystem, shell, skill marketplace, memory, and finance actions.
    - Add example contracts under `examples/openclaw_class/`.
-   - Add skill manifest schema and deterministic skill install preflight.
-   - Add CLI commands for `preflight-tool`, `record-memory-update`, and `verify-skill`.
+   - Extend skill preflight into `record_skill_install` flight-recorder events.
    - Add docs for deploying Pidgeon as a sidecar beside an OpenClaw-class gateway.
+   - Add HTML replay for sidecar traces.
 
 2. **AAFR next hardening**
    - Add stable trace fixtures for the flight recorder demo.

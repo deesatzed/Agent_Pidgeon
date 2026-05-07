@@ -45,3 +45,7 @@ def validate_catalog(catalog: dict[str, Any]) -> None:
 
 def validate_pidgin_trace(payload: dict[str, Any]) -> None:
     _validate(payload, "pidgin-trace.schema.json")
+
+
+def validate_skill_manifest(payload: dict[str, Any]) -> None:
+    _validate(payload, "pidgin-skill-manifest.schema.json")

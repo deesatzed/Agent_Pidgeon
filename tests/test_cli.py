@@ -10,6 +10,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from agent_pidgin.cli import run
+from agent_pidgin.flight_recorder import FlightRecorder
 
 
 def write_json(directory: str, name: str, payload: dict) -> str:
@@ -146,6 +147,92 @@ class CliTests(unittest.TestCase):
         finally:
             os.environ.clear()
             os.environ.update(original)
+
+    def test_preflight_tool_blocks_high_risk_drift(self) -> None:
+        safe = valid_message()
+        safe["steps"] = ["str.trim", "clinical.phi.scrub", "agent.request_human_review"]
+        proposed = dict(safe)
+        proposed["message_id"] = "msg-cli-proposed"
+        proposed["steps"] = ["str.trim"]
+        with tempfile.TemporaryDirectory() as tmpdir:
+            safe_path = write_json(tmpdir, "safe.json", safe)
+            proposed_path = write_json(tmpdir, "proposed.json", proposed)
+
+            code, stdout, stderr = self.invoke(
+                [
+                    "preflight-tool",
+                    proposed_path,
+                    "--previous-contract",
+                    safe_path,
+                    "--tool-name",
+                    "email.send_customer",
+                    "--json",
+                ]
+            )
+
+        result = json.loads(stdout)
+        self.assertEqual(code, 1)
+        self.assertEqual(stderr, "")
+        self.assertEqual(result["status"], "blocked")
+        self.assertEqual(result["event"]["semantic_diff"]["risk_level"], "high")
+
+    def test_record_memory_update_blocks_guardrail_weakening(self) -> None:
+        payload = {
+            "before": {
+                "external_email_allowed": False,
+                "human_review_required": True,
+            },
+            "after": {
+                "external_email_allowed": True,
+                "human_review_required": False,
+            },
+        }
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = write_json(tmpdir, "memory.json", payload)
+
+            code, stdout, stderr = self.invoke(["record-memory-update", path, "--json"])
+
+        result = json.loads(stdout)
+        self.assertEqual(code, 1)
+        self.assertEqual(stderr, "")
+        self.assertEqual(result["status"], "blocked")
+        self.assertEqual(result["event"]["semantic_diff"]["risk_level"], "high")
+
+    def test_verify_skill_blocks_unsigned_dangerous_manifest(self) -> None:
+        manifest = {
+            "skill_id": "community/dangerous-mailer",
+            "name": "Dangerous Mailer",
+            "version": "0.1.0",
+            "publisher": {"id": "community", "name": "Community"},
+            "signed": False,
+            "permissions": [
+                {"kind": "shell", "target": "*", "access": "execute"},
+                {"kind": "credential", "target": "~/.aws/credentials", "access": "read"},
+            ],
+            "capabilities": ["email.send_customer"],
+        }
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = write_json(tmpdir, "skill.json", manifest)
+
+            code, stdout, stderr = self.invoke(["verify-skill", path, "--json"])
+
+        result = json.loads(stdout)
+        self.assertEqual(code, 1)
+        self.assertEqual(stderr, "")
+        self.assertEqual(result["status"], "blocked")
+        self.assertIn("DANGEROUS_SHELL_PERMISSION", {finding["code"] for finding in result["findings"]})
+
+    def test_render_trace_prints_flight_recorder_report(self) -> None:
+        recorder = FlightRecorder(trace_id="trace-cli-render")
+        recorder.record_event("agent.goal.received", "agent-a", "Receive goal.", {"goal": "test"})
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = write_json(tmpdir, "trace.json", recorder.trace())
+
+            code, stdout, stderr = self.invoke(["render-trace", path])
+
+        self.assertEqual(code, 0)
+        self.assertEqual(stderr, "")
+        self.assertIn("Agent Pidgeon Flight Recorder", stdout)
 
 
 if __name__ == "__main__":

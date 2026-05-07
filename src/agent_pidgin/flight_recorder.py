@@ -300,9 +300,9 @@ def diff_memory_guardrails(
 
 
 def _weakens_guardrail(key: str, before_value: Any, after_value: Any) -> bool:
-    if key.endswith("_allowed") and before_value is False and after_value is True:
+    if ("allowed" in key or key.startswith("may_")) and before_value is False and after_value is True:
         return True
-    if key.endswith("_required") and before_value is True and after_value is False:
+    if "required" in key and before_value is True and after_value is False:
         return True
     return False
 

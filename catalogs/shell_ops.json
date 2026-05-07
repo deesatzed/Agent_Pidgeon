@@ -1,0 +1,47 @@
+{
+  "catalog_id": "shell_ops",
+  "version": "0.1.0",
+  "description": "OpenClaw-class shell command proposal and sandbox guardrail pointers.",
+  "concepts": [
+    {
+      "pointer": "shell.propose_command",
+      "type_signature": "command_request -> command_proposal",
+      "description": "Represent a shell command proposal without executing it.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda request: {'action': 'propose_shell_command', 'execute': False, 'request': request}",
+        "javascript": "(request) => ({ action: 'propose_shell_command', execute: false, request })"
+      }
+    },
+    {
+      "pointer": "shell.block_destructive_command",
+      "type_signature": "command_request -> policy_finding",
+      "description": "Block shell commands categorized as destructive or irreversible.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda request: {'blocked': True, 'reason': 'destructive command requires explicit policy override', 'request': request}",
+        "javascript": "(request) => ({ blocked: true, reason: 'destructive command requires explicit policy override', request })"
+      }
+    },
+    {
+      "pointer": "shell.require_sandbox",
+      "type_signature": "command_request -> policy_requirement",
+      "description": "Require sandboxing for proposed shell command execution.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda request: {'sandbox_required': True, 'request': request}",
+        "javascript": "(request) => ({ sandbox_required: true, request })"
+      }
+    },
+    {
+      "pointer": "shell.require_human_approval",
+      "type_signature": "command_request -> approval_request",
+      "description": "Require human approval before shell command execution.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda request: {'requires_human_approval': True, 'payload': request}",
+        "javascript": "(request) => ({ requires_human_approval: true, payload: request })"
+      }
+    }
+  ]
+}

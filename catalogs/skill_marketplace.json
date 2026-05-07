@@ -1,0 +1,57 @@
+{
+  "catalog_id": "skill_marketplace",
+  "version": "0.1.0",
+  "description": "OpenClaw-class skill marketplace and community skill install guardrail pointers.",
+  "concepts": [
+    {
+      "pointer": "skill.install",
+      "type_signature": "skill_manifest -> install_request",
+      "description": "Represent a proposed skill install without installing it.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda manifest: {'action': 'install_skill', 'requires_preflight': True, 'manifest': manifest}",
+        "javascript": "(manifest) => ({ action: 'install_skill', requires_preflight: true, manifest })"
+      }
+    },
+    {
+      "pointer": "skill.verify_manifest",
+      "type_signature": "skill_manifest -> manifest_verification",
+      "description": "Require manifest validation before a skill can be installed.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda manifest: {'manifest_verification_required': True, 'manifest': manifest}",
+        "javascript": "(manifest) => ({ manifest_verification_required: true, manifest })"
+      }
+    },
+    {
+      "pointer": "skill.require_signed_publisher",
+      "type_signature": "skill_manifest -> policy_requirement",
+      "description": "Require a trusted publisher signature for marketplace skill installation.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda manifest: {'signed_publisher_required': True, 'manifest': manifest}",
+        "javascript": "(manifest) => ({ signed_publisher_required: true, manifest })"
+      }
+    },
+    {
+      "pointer": "skill.diff_permissions",
+      "type_signature": "skill_manifest, skill_manifest -> permission_diff",
+      "description": "Compare previous and proposed skill permissions for meaningful changes.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda previous, proposed: {'previous': previous, 'proposed': proposed, 'permission_diff_required': True}",
+        "javascript": "(previous, proposed) => ({ previous, proposed, permission_diff_required: true })"
+      }
+    },
+    {
+      "pointer": "skill.block_credential_access",
+      "type_signature": "skill_manifest -> policy_finding",
+      "description": "Block skills that request credential, token, keychain, or secret-file access.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda manifest: {'blocked': True, 'reason': 'credential access is not allowed for unsigned skills', 'manifest': manifest}",
+        "javascript": "(manifest) => ({ blocked: true, reason: 'credential access is not allowed for unsigned skills', manifest })"
+      }
+    }
+  ]
+}
