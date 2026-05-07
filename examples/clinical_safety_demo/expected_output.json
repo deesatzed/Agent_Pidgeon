@@ -1,0 +1,56 @@
+{
+  "message_id": "msg-clinical-safety-001",
+  "status": "resolved",
+  "artifact": {
+    "kind": "repo",
+    "repo_id": "waynesatz/agent-pidgin-data",
+    "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "status": "simulated-mounted"
+  },
+  "resolution": {
+    "target_language": "python",
+    "resolved_steps": [
+      {
+        "pointer": "str.trim",
+        "type_signature": "str -> str"
+      },
+      {
+        "pointer": "str.normalize_unicode",
+        "type_signature": "str -> str"
+      },
+      {
+        "pointer": "clinical.phi.scrub",
+        "type_signature": "str -> str"
+      },
+      {
+        "pointer": "clinical.negation.preserve",
+        "type_signature": "str -> str"
+      },
+      {
+        "pointer": "clinical.uncertainty.annotate",
+        "type_signature": "str -> annotation"
+      },
+      {
+        "pointer": "agent.attach_receipts",
+        "type_signature": "resolution -> resolution"
+      }
+    ],
+    "receipts": [
+      {
+        "pointer": "str.trim",
+        "catalog_hash": "<sha256>",
+        "artifact_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    ]
+  },
+  "policy_findings": [
+    {
+      "severity": "warning",
+      "code": "RAW_EXECUTION_DENIED"
+    },
+    {
+      "severity": "warning",
+      "code": "SENSITIVE_POINTER_RECEIPTS_REQUIRED"
+    }
+  ]
+}

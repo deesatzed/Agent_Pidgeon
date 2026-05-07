@@ -10,6 +10,7 @@ from agent_pidgin.protocol import PidginHandshake, PidginMessage
 class ProtocolTests(unittest.TestCase):
     def test_pidgin_handshake_from_dict_parses_required_fields(self) -> None:
         payload = {
+            "pidgin_version": "0.1",
             "message_type": "handshake",
             "message_id": "msg-hs-001",
             "sender_id": "agent-a",
@@ -24,6 +25,7 @@ class ProtocolTests(unittest.TestCase):
 
     def test_pidgin_message_from_dict_parses_required_fields(self) -> None:
         payload = {
+            "pidgin_version": "0.1",
             "message_id": "msg-001",
             "sender_id": "agent-a",
             "receiver_id": "agent-b",
@@ -46,6 +48,7 @@ class ProtocolTests(unittest.TestCase):
 
     def test_pidgin_message_from_dict_parses_optional_artifact_target(self) -> None:
         payload = {
+            "pidgin_version": "0.1",
             "message_type": "resolve",
             "message_id": "msg-003",
             "sender_id": "agent-a",
@@ -69,6 +72,7 @@ class ProtocolTests(unittest.TestCase):
 
     def test_pidgin_message_requires_non_empty_steps(self) -> None:
         payload = {
+            "pidgin_version": "0.1",
             "message_id": "msg-002",
             "sender_id": "agent-a",
             "receiver_id": "agent-b",
@@ -84,6 +88,7 @@ class ProtocolTests(unittest.TestCase):
 
     def test_pidgin_message_validates_dataset_repo_format(self) -> None:
         payload = {
+            "pidgin_version": "0.1",
             "message_id": "msg-004",
             "sender_id": "agent-a",
             "receiver_id": "agent-b",
@@ -99,6 +104,7 @@ class ProtocolTests(unittest.TestCase):
 
     def test_pidgin_message_validates_dataset_revision_format(self) -> None:
         payload = {
+            "pidgin_version": "0.1",
             "message_id": "msg-005",
             "sender_id": "agent-a",
             "receiver_id": "agent-b",
@@ -114,6 +120,7 @@ class ProtocolTests(unittest.TestCase):
 
     def test_pidgin_message_validates_artifact_repo_format(self) -> None:
         payload = {
+            "pidgin_version": "0.1",
             "message_id": "msg-006",
             "sender_id": "agent-a",
             "receiver_id": "agent-b",
@@ -128,6 +135,19 @@ class ProtocolTests(unittest.TestCase):
         }
 
         with self.assertRaisesRegex(ValueError, "Invalid artifact repo format"):
+            PidginMessage.from_dict(payload)
+
+    def test_pidgin_message_requires_version(self) -> None:
+        payload = {
+            "message_id": "msg-007",
+            "sender_id": "agent-a",
+            "receiver_id": "agent-b",
+            "target_language": "python",
+            "steps": ["str.trim"],
+            "created_at": "2026-03-25T10:30:00Z",
+        }
+
+        with self.assertRaisesRegex(ValueError, "pidgin_version"):
             PidginMessage.from_dict(payload)
 
 

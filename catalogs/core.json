@@ -1,0 +1,88 @@
+{
+  "catalog_id": "core",
+  "version": "0.1.0",
+  "description": "Core non-domain-specific semantic pointers.",
+  "concepts": [
+    {
+      "pointer": "str.trim",
+      "type_signature": "str -> str",
+      "description": "Remove leading and trailing whitespace.",
+      "implementations": {
+        "python": "lambda s: s.strip()",
+        "javascript": "(s) => s.trim()"
+      }
+    },
+    {
+      "pointer": "str.lowercase",
+      "type_signature": "str -> str",
+      "description": "Lowercase a string.",
+      "implementations": {
+        "python": "lambda s: s.lower()",
+        "javascript": "(s) => s.toLowerCase()"
+      }
+    },
+    {
+      "pointer": "str.ascii_only",
+      "type_signature": "str -> str",
+      "description": "Remove non-ASCII characters.",
+      "implementations": {
+        "python": "lambda s: ''.join(ch for ch in s if ord(ch) < 128)",
+        "javascript": "(s) => s.replace(/[^\\x00-\\x7F]/g, '')"
+      }
+    },
+    {
+      "pointer": "str.normalize_unicode",
+      "type_signature": "str -> str",
+      "description": "Normalize unicode text to NFKC form.",
+      "implementations": {
+        "python": "lambda s: __import__('unicodedata').normalize('NFKC', s)",
+        "javascript": "(s) => s.normalize('NFKC')"
+      }
+    },
+    {
+      "pointer": "str.remove_extra_whitespace",
+      "type_signature": "str -> str",
+      "description": "Collapse runs of whitespace to a single space.",
+      "implementations": {
+        "python": "lambda s: ' '.join(s.split())",
+        "javascript": "(s) => s.replace(/\\s+/g, ' ').trim()"
+      }
+    },
+    {
+      "pointer": "json.parse",
+      "type_signature": "str -> json",
+      "description": "Parse JSON text into structured data.",
+      "implementations": {
+        "python": "lambda s: __import__('json').loads(s)",
+        "javascript": "(s) => JSON.parse(s)"
+      }
+    },
+    {
+      "pointer": "json.stringify",
+      "type_signature": "json -> str",
+      "description": "Serialize structured data as stable JSON text.",
+      "implementations": {
+        "python": "lambda obj: __import__('json').dumps(obj, sort_keys=True, separators=(',', ':'))",
+        "javascript": "(obj) => JSON.stringify(obj)"
+      }
+    },
+    {
+      "pointer": "csv.normalize_headers",
+      "type_signature": "table -> table",
+      "description": "Normalize table headers for stable downstream use.",
+      "implementations": {
+        "python": "lambda rows: [{k.strip().lower().replace(' ', '_'): v for k, v in row.items()} for row in rows]",
+        "javascript": "(rows) => rows.map((row) => Object.fromEntries(Object.entries(row).map(([k, v]) => [k.trim().toLowerCase().replace(/\\s+/g, '_'), v])))"
+      }
+    },
+    {
+      "pointer": "table.dedupe_rows",
+      "type_signature": "table -> table",
+      "description": "Remove duplicate table rows while preserving first occurrence order.",
+      "implementations": {
+        "python": "lambda rows: list({tuple(sorted(row.items())): row for row in rows}.values())",
+        "javascript": "(rows) => Array.from(new Map(rows.map((row) => [JSON.stringify(Object.entries(row).sort()), row])).values())"
+      }
+    }
+  ]
+}

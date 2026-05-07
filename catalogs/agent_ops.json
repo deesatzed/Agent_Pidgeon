@@ -1,0 +1,52 @@
+{
+  "catalog_id": "agent_ops",
+  "version": "0.1.0",
+  "description": "Agent operation and trust-control semantic pointers.",
+  "concepts": [
+    {
+      "pointer": "agent.require_evidence",
+      "type_signature": "any -> evidence_request",
+      "description": "Require evidence to accompany an agent output.",
+      "implementations": {
+        "python": "lambda value: {'value': value, 'evidence_required': True}",
+        "javascript": "(value) => ({ value, evidence_required: true })"
+      }
+    },
+    {
+      "pointer": "agent.attach_receipts",
+      "type_signature": "resolution -> resolution",
+      "description": "Require receipts to be attached to a resolution response.",
+      "implementations": {
+        "python": "lambda resolution: resolution",
+        "javascript": "(resolution) => resolution"
+      }
+    },
+    {
+      "pointer": "agent.reject_untrusted_artifact",
+      "type_signature": "artifact -> policy_finding",
+      "description": "Reject artifacts that do not satisfy trust policy.",
+      "implementations": {
+        "python": "lambda artifact: {'trusted': False, 'artifact': artifact}",
+        "javascript": "(artifact) => ({ trusted: false, artifact })"
+      }
+    },
+    {
+      "pointer": "agent.request_human_review",
+      "type_signature": "any -> review_request",
+      "description": "Request human review for a workflow or artifact.",
+      "implementations": {
+        "python": "lambda value: {'requires_human_review': True, 'payload': value}",
+        "javascript": "(value) => ({ requires_human_review: true, payload: value })"
+      }
+    },
+    {
+      "pointer": "agent.semantic_diff",
+      "type_signature": "workflow, workflow -> semantic_diff",
+      "description": "Compare semantic workflow contracts for meaningful changes.",
+      "implementations": {
+        "python": "lambda left, right: {'left': left, 'right': right, 'diff_required': True}",
+        "javascript": "(left, right) => ({ left, right, diff_required: true })"
+      }
+    }
+  ]
+}

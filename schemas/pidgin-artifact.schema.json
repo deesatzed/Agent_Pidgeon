@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-pidgin.local/schemas/pidgin-artifact.schema.json",
+  "title": "Pidgin Artifact Target",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "repo", "revision"],
+  "properties": {
+    "kind": {
+      "enum": ["hf", "local", "repo"]
+    },
+    "repo": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9._-]+(/[a-zA-Z0-9._-]+)?$"
+    },
+    "revision": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9._-]+$"
+    }
+  }
+}

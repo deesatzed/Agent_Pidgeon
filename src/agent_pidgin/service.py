@@ -6,8 +6,10 @@ from typing import Any, Protocol
 
 from agent_pidgin.catalog import SeedCatalog
 from agent_pidgin.config import PidginConfig
+from agent_pidgin.policy import PidginPolicy, enforce_policy, findings_to_dicts, has_policy_errors
 from agent_pidgin.protocol import PidginHandshake, PidginMessage
 from agent_pidgin.resolver import PidginResolver
+from agent_pidgin.schema_validator import validate_pidgin_handshake, validate_pidgin_message
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +31,7 @@ class PidginReceiverService:
     default_mount_root: str = "/tmp/agent-pidgin"
 
     def handshake(self, payload: dict[str, Any], config: PidginConfig) -> dict[str, Any]:
+        validate_pidgin_handshake(payload)
         message = PidginHandshake.from_dict(payload)
         logger.info(
             "Handling handshake request",
@@ -44,7 +47,7 @@ class PidginReceiverService:
             "capabilities": {
                 "receiver_id": message.receiver_id,
                 "supported_message_types": ["handshake", "resolve"],
-                "supported_languages": ["python", "javascript"],
+                "supported_languages": self.catalog.supported_languages(),
                 "supported_pointers": list(self.catalog.concepts.keys()),
                 "artifact_defaults": {
                     "artifact_kind": config.artifact_kind,
@@ -60,8 +63,10 @@ class PidginReceiverService:
         payload: dict[str, Any],
         hf_token: str | None = None,
         config: PidginConfig | None = None,
+        policy: PidginPolicy | None = None,
     ) -> dict[str, Any]:
         start_time = time.perf_counter()
+        validate_pidgin_message(payload)
         message = PidginMessage.from_dict(payload)
 
         logger.info(
@@ -89,6 +94,32 @@ class PidginReceiverService:
             },
         )
 
+        policy_findings = enforce_policy(message, policy) if policy is not None else []
+        if has_policy_errors(policy_findings):
+            logger.warning(
+                "Message resolution blocked by policy",
+                extra={
+                    "message_id": message.message_id,
+                    "policy_findings": findings_to_dicts(policy_findings),
+                    "status": "policy_failed",
+                },
+            )
+            return {
+                "message_id": message.message_id,
+                "status": "policy_failed",
+                "artifact": {
+                    "kind": effective_kind,
+                    "repo_id": effective_repo,
+                    "revision": effective_revision,
+                },
+                "resolution": {
+                    "target_language": message.target_language,
+                    "resolved_steps": [],
+                    "receipts": [],
+                },
+                "policy_findings": findings_to_dicts(policy_findings),
+            }
+
         mount_path = self._mount_path_for_repo(effective_repo, mount_root=active_config.mount_root)
 
         try:
@@ -105,6 +136,8 @@ class PidginReceiverService:
             resolution = PidginResolver(self.catalog).resolve_steps(
                 message.steps,
                 target_language=message.target_language,
+                artifact_repo=effective_repo,
+                artifact_revision=effective_revision,
             )
 
             duration = time.perf_counter() - start_time
@@ -123,6 +156,7 @@ class PidginReceiverService:
                 "status": "resolved",
                 "artifact": artifact,
                 "resolution": resolution,
+                "policy_findings": findings_to_dicts(policy_findings),
             }
         except Exception as e:
             duration = time.perf_counter() - start_time

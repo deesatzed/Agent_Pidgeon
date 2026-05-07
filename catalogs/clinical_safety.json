@@ -1,0 +1,57 @@
+{
+  "catalog_id": "clinical_safety",
+  "version": "0.1.0",
+  "description": "Guarded safety and annotation primitives. These are not diagnostic logic.",
+  "concepts": [
+    {
+      "pointer": "clinical.phi.scrub",
+      "type_signature": "str -> str",
+      "description": "Redact obvious PHI-like spans for safety demonstrations.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda s: __import__('re').sub(r'\\b(?:MRN|SSN|DOB)[:# ]+\\S+', '[REDACTED]', s)",
+        "javascript": "(s) => s.replace(/\\b(?:MRN|SSN|DOB)[:# ]+\\S+/g, '[REDACTED]')"
+      }
+    },
+    {
+      "pointer": "clinical.negation.preserve",
+      "type_signature": "str -> str",
+      "description": "Mark the workflow requirement that negated clinical statements must be preserved.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda s: s",
+        "javascript": "(s) => s"
+      }
+    },
+    {
+      "pointer": "clinical.uncertainty.annotate",
+      "type_signature": "str -> annotation",
+      "description": "Annotate uncertainty cues without making diagnosis claims.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda s: {'text': s, 'uncertainty_required': any(term in s.lower() for term in ['possible', 'may', 'could', 'unclear'])}",
+        "javascript": "(s) => ({ text: s, uncertainty_required: ['possible', 'may', 'could', 'unclear'].some((term) => s.toLowerCase().includes(term)) })"
+      }
+    },
+    {
+      "pointer": "clinical.redflag.flag_for_review",
+      "type_signature": "str -> review_flag",
+      "description": "Flag safety-sensitive text for human review without diagnosing.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda s: {'requires_review': True, 'reason': 'clinical red flag workflow requires human review'}",
+        "javascript": "(s) => ({ requires_review: true, reason: 'clinical red flag workflow requires human review' })"
+      }
+    },
+    {
+      "pointer": "clinical.escalate.human",
+      "type_signature": "any -> review_request",
+      "description": "Require human escalation for sensitive workflows.",
+      "safety_sensitive": true,
+      "implementations": {
+        "python": "lambda value: {'requires_human_review': True, 'payload': value}",
+        "javascript": "(value) => ({ requires_human_review: true, payload: value })"
+      }
+    }
+  ]
+}

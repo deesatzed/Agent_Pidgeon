@@ -54,6 +54,7 @@ class PidginArtifactTarget:
 
 @dataclass(frozen=True)
 class PidginHandshake:
+    pidgin_version: str
     message_type: str
     message_id: str
     sender_id: str
@@ -62,13 +63,16 @@ class PidginHandshake:
 
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> "PidginHandshake":
-        required_fields = ["message_type", "message_id", "sender_id", "receiver_id", "created_at"]
+        required_fields = ["pidgin_version", "message_type", "message_id", "sender_id", "receiver_id", "created_at"]
         missing = [field for field in required_fields if field not in payload]
         if missing:
             raise ValueError(f"Missing required fields: {', '.join(missing)}")
+        if str(payload["pidgin_version"]) != "0.1":
+            raise ValueError("pidgin_version must be 0.1")
         if str(payload["message_type"]) != "handshake":
             raise ValueError("message_type must be handshake")
         return cls(
+            pidgin_version="0.1",
             message_type="handshake",
             message_id=str(payload["message_id"]),
             sender_id=str(payload["sender_id"]),
@@ -79,6 +83,7 @@ class PidginHandshake:
 
 @dataclass(frozen=True)
 class PidginMessage:
+    pidgin_version: str
     message_type: str
     message_id: str
     sender_id: str
@@ -96,6 +101,11 @@ class PidginMessage:
 
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> "PidginMessage":
+        if "pidgin_version" not in payload:
+            raise ValueError("Missing required fields: pidgin_version")
+        if str(payload["pidgin_version"]) != "0.1":
+            raise ValueError("pidgin_version must be 0.1")
+
         message_type = str(payload.get("message_type", "resolve"))
         if message_type != "resolve":
             raise ValueError("message_type must be resolve")
@@ -124,6 +134,7 @@ class PidginMessage:
             artifact = PidginArtifactTarget.from_dict(artifact_payload)
 
         return cls(
+            pidgin_version="0.1",
             message_type=message_type,
             message_id=str(payload["message_id"]),
             sender_id=str(payload["sender_id"]),

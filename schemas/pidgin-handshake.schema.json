@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-pidgin.local/schemas/pidgin-handshake.schema.json",
+  "title": "Pidgin Handshake Message",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "pidgin_version",
+    "message_type",
+    "message_id",
+    "sender_id",
+    "receiver_id",
+    "created_at"
+  ],
+  "properties": {
+    "pidgin_version": {
+      "const": "0.1"
+    },
+    "message_type": {
+      "const": "handshake"
+    },
+    "message_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sender_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "receiver_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

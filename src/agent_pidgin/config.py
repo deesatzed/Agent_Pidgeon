@@ -15,11 +15,18 @@ class PidginConfig:
     mount_root: str
     hf_mount_binary: Path
     hf_token: str | None
+    catalog_paths: tuple[Path, ...] = ()
+    policy_path: Path | None = None
+    enforce_policy: bool = False
 
     @classmethod
     def from_env(cls) -> "PidginConfig":
         dataset_repo = os.environ.get("AGENT_PIDGIN_DATA_REPO", "waynesatz/agent-pidgin-data")
         dataset_revision = os.environ.get("AGENT_PIDGIN_DATA_REVISION", "main")
+        catalog_paths = tuple(
+            Path(path) for path in os.environ.get("AGENT_PIDGIN_CATALOGS", "").split(os.pathsep) if path
+        )
+        policy_path = os.environ.get("AGENT_PIDGIN_POLICY_PATH")
         return cls(
             dataset_repo=dataset_repo,
             dataset_revision=dataset_revision,
@@ -29,4 +36,7 @@ class PidginConfig:
             mount_root=os.environ.get("AGENT_PIDGIN_MOUNT_ROOT", "/tmp/agent-pidgin"),
             hf_mount_binary=Path(os.environ.get("HF_MOUNT_BINARY", str(Path.home() / ".local/bin/hf-mount"))),
             hf_token=os.environ.get("HF_TOKEN") or None,
+            catalog_paths=catalog_paths,
+            policy_path=Path(policy_path) if policy_path else None,
+            enforce_policy=os.environ.get("AGENT_PIDGIN_ENFORCE_POLICY", "0") == "1",
         )

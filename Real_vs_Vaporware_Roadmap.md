@@ -1,19 +1,23 @@
-# Agent-Pidgin: Reality vs. Potential & Production Roadmap (2026-03-25)
+# Agent Pidgin: Reality vs. Potential & Production Roadmap
 
-This document provides a critical assessment of the current state of the **agent-pidgin** project, distinguishing between verified functionality and planned potential, and outlines the strategy for achieving production-grade stability and scale.
+This document distinguishes verified functionality from planned potential. The project has moved beyond the original HF-mount/A2A proof of concept into a deterministic semantic resolver and Autonomous Agent Flight Recorder prototype.
 
 ---
 
 ## 1. Reality Check: What Actually Works (Verified)
 
-These features have been implemented, are under version control, and are verified by the automated test suite (`tests/`).
+These features have been implemented locally and are verified by the automated test suite (`tests/`).
 
-*   **Hybrid Protocol Engine:** The "brains" of the protocol. It correctly handles the precedence logic between legacy `dataset_*` fields and the new `artifact` model.
-*   **MCP Stdio Transport:** The project successfully communicates as an MCP server over `stdio` using `FastMCP`. Handshake and resolution round-trips are fully functional.
-*   **Secure Input Validation:** A robust regex-based security layer protects the system from shell injection and path traversal by validating all `repo_id` and `revision` strings before they reach the system shell.
-*   **Idempotent Mount Management:** The `HfMountManager` correctly interface with the `hf-mount` binary, handling "already mounted" states gracefully to prevent process conflicts.
-*   **Structured Logging & Telemetry:** All key operations (handshake, mount, resolve) emit structured logs to `stderr` with sub-millisecond timing data for performance tracking.
-*   **CI/CD Foundation:** A GitHub Actions pipeline automatically enforces code quality (via Ruff) and functional correctness (via Unittest) on every push.
+*   **Semantic Contract Resolver:** Validates resolve messages, enforces policy, resolves trusted catalog pointers, and returns implementation plans with receipts.
+*   **Trusted Catalogs:** Loads JSON catalogs for core, clinical-safety, and agent-operation pointers, with duplicate pointer detection and deterministic catalog hashes.
+*   **Policy Enforcement:** Rejects unpinned revisions and unsupported artifact kinds, warns on raw execution, and requires receipts for sensitive pointers.
+*   **Semantic Diffing:** Detects removed safety-sensitive pointers, removed control guardrails, artifact drift, target-language drift, and implementation changes.
+*   **Resolution Receipts:** Records pointer, type signature, implementation hash, catalog ID/version/hash, artifact repo/revision, resolver version, timestamp, and receipt ID.
+*   **Autonomous Agent Flight Recorder:** Records goals, memory updates, proposed tool calls, semantic diffs, policy findings, receipt IDs, and hash-chained trace events.
+*   **Memory Guardrail Detection:** Blocks unapproved changes such as `external_email_allowed: false -> true` or `human_review_required: true -> false`.
+*   **Trace Integrity:** Adds `previous_event_hash`, `event_hash`, and `trace_hash`, with validation that catches tampering after trace generation.
+*   **Transport Surfaces:** Provides CLI commands, MCP-style wrappers, stdio sender coverage, and A2A JSON examples around the same resolver boundary.
+*   **LLM-Assisted Authoring:** Supports OpenRouter/Qwen-assisted contract authoring, explanation, and review while keeping the deterministic resolver as the authority.
 
 ---
 
@@ -21,10 +25,12 @@ These features have been implemented, are under version control, and are verifie
 
 These are documented goals or architectural directions that are not yet fully realized in the codebase.
 
-*   **Production-Scale Observability:** While logs exist, integrated distributed tracing (OpenTelemetry) and real-time health dashboards are currently theoretical.
-*   **Multi-Artifact Bundling:** The protocol defines an `artifact` object, but the receiver currently processes one repository at a time. Resolving a "bundle" of multiple repositories in a single atomic request is planned but not implemented.
-*   **Resource & Disk Quotas:** The system assumes sufficient disk space and "friendly" repository sizes. There are currently no automated checks to prevent a repository from exhausting host disk space.
-*   **Dynamic Plugin Resolvers:** The `resolver.py` is currently a static implementation. The vision of a "plugin-based" architecture where agents can register new resolution logic at runtime remains a future goal.
+*   **Production Trace Storage:** Trace hashes are tamper-evident in local JSON, but there is no append-only external store or signed trace root yet.
+*   **OpenTelemetry Export:** Pidgin is not telemetry, but AAFR traces should be exportable into telemetry systems. That adapter is not implemented yet.
+*   **Tool Result Observation:** The flight recorder currently records proposed calls, not downstream tool results.
+*   **Approval Model:** Approved memory writes use a simple `approved_by` string; production workflows need signed approvals and richer authority modeling.
+*   **Catalog/Receipt Signatures:** Catalog hashes and receipt hashes exist, but signed catalogs and signed receipts are not implemented yet.
+*   **Production Resource Limits:** The HF mount path still needs disk, process, timeout, and quota hardening before production use.
 
 ---
 
@@ -33,18 +39,20 @@ These are documented goals or architectural directions that are not yet fully re
 To bridge the gap between PoC and Production, the following architectural mitigations are recommended:
 
 ### A. Scaling & Concurrency
-*   **Mount Reference Counting:** Implement a registry to track active mounts. Only stop a mount when the reference count hits zero to avoid redundant and expensive mount operations.
-*   **Async Process Execution:** Transition from blocking `subprocess.run` to `asyncio` for shell calls, allowing a single receiver to handle dozens of concurrent resolution requests without blocking.
+*   **Trace Export:** Add OpenTelemetry-compatible span export while keeping Pidgin as the semantic authority.
+*   **Append-Only Trace Sink:** Store trace roots in an append-only log or signed audit sink.
+*   **HTML Replay UI:** Build a human-readable timeline for goals, memory changes, proposed calls, diffs, policy findings, and receipt IDs.
 
 ### B. Security & Resource Protection
-*   **Repository Whitelisting:** Implement a strict `ALLOWED_REPOS` configuration to prevent the system from being used to mount unauthorized or malicious repositories.
-*   **Process Guardrails:** Add strict wall-clock timeouts and memory limits to the `hf-mount` child processes to ensure they cannot "hang" the main receiver.
-*   **Disk Space Verification:** Implement a pre-mount check to ensure the host has sufficient capacity before attempting a download.
+*   **Signed Catalogs and Receipts:** Sign catalog roots and receipt bundles.
+*   **Repository Whitelisting:** Keep strict `allowed_repos` policy configuration for production deployments.
+*   **Process Guardrails:** Add strict wall-clock timeouts and memory limits to any real mount or resolver subprocess path.
+*   **Disk Space Verification:** Implement pre-mount checks before artifact downloads.
 
 ### C. Operational Reliability
-*   **Automated Janitor (TTL):** Implement a background task to automatically unmount repositories that haven't been accessed within a defined Time-To-Live (e.g., 30 minutes).
-*   **Graceful Shutdown:** Add signal handlers (SIGTERM/SIGINT) to ensure all FUSE mounts are cleanly unmounted if the receiver service is restarted or stopped.
-*   **Health Check MCP Tool:** Add a dedicated tool for external monitoring systems to verify the service's "readiness" (binary availability, mount point permissions, HF API connectivity).
+*   **Golden Trace Fixtures:** Preserve stable AAFR traces for regression testing and demos.
+*   **Tool Result Events:** Add event types for observed tool results, failures, and rollbacks.
+*   **Health Check MCP Tool:** Add a dedicated tool for external monitoring systems to verify resolver readiness and catalog/policy load state.
 
 ---
-**Status:** This roadmap serves as the blueprint for the `v0.3.0` release cycle.
+**Status:** The current repo is a working proof of concept for semantic resolution and flight-recorder traces. It is not yet a production observability or audit platform.

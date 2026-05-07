@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-pidgin.local/schemas/pidgin-receipt.schema.json",
+  "title": "Pidgin Resolution Receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pointer",
+    "type_signature",
+    "target_language",
+    "implementation",
+    "implementation_hash",
+    "catalog_hash",
+    "catalog_id",
+    "catalog_version",
+    "artifact_repo",
+    "artifact_revision",
+    "resolver_version",
+    "resolved_at",
+    "receipt_id"
+  ],
+  "properties": {
+    "pointer": {
+      "type": "string",
+      "minLength": 1
+    },
+    "type_signature": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target_language": {
+      "type": "string",
+      "minLength": 1
+    },
+    "implementation": {
+      "type": "string",
+      "minLength": 1
+    },
+    "implementation_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "catalog_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "catalog_id": {
+      "type": "string"
+    },
+    "catalog_version": {
+      "type": "string"
+    },
+    "artifact_repo": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifact_revision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "resolver_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "receipt_id": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

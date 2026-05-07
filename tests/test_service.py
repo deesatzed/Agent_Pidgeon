@@ -41,6 +41,7 @@ class ServiceTests(unittest.TestCase):
 
         result = service.handshake(
             {
+                "pidgin_version": "0.1",
                 "message_type": "handshake",
                 "message_id": "msg-hs-101",
                 "sender_id": "agent-a",
@@ -66,10 +67,17 @@ class ServiceTests(unittest.TestCase):
 
         result = service.resolve_message(
             {
+                "pidgin_version": "0.1",
+                "message_type": "resolve",
                 "message_id": "msg-101",
                 "sender_id": "agent-a",
                 "receiver_id": "agent-b",
                 "target_language": "python",
+                "artifact": {
+                    "kind": "repo",
+                    "repo": "waynesatz/agent-pidgin-data",
+                    "revision": "main",
+                },
                 "dataset_repo": "waynesatz/agent-pidgin-data",
                 "dataset_revision": "main",
                 "steps": ["str.trim", "str.lowercase"],
@@ -93,6 +101,7 @@ class ServiceTests(unittest.TestCase):
 
         result = service.resolve_message(
             {
+                "pidgin_version": "0.1",
                 "message_type": "resolve",
                 "message_id": "msg-102",
                 "sender_id": "agent-a",
@@ -124,7 +133,7 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(gateway.calls[0]["repo_id"], "openai-community/gpt2")
         self.assertEqual(gateway.calls[0]["mount_path"], "/tmp/agent-pidgin/gpt2")
 
-    def test_receiver_service_falls_back_to_config_artifact_defaults(self) -> None:
+    def test_receiver_service_rejects_missing_artifact_contract(self) -> None:
         gateway = RecordingMountGateway()
         service = PidginReceiverService(
             mount_gateway=gateway,
@@ -132,31 +141,30 @@ class ServiceTests(unittest.TestCase):
             default_mount_root="/tmp/agent-pidgin",
         )
 
-        result = service.resolve_message(
-            {
-                "message_type": "resolve",
-                "message_id": "msg-103",
-                "sender_id": "agent-a",
-                "receiver_id": "agent-b",
-                "target_language": "python",
-                "steps": ["str.trim"],
-                "created_at": "2026-03-25T10:50:00Z",
-            },
-            config=PidginConfig(
-                dataset_repo="waynesatz/legacy-dataset",
-                dataset_revision="legacy-main",
-                artifact_kind="repo",
-                artifact_repo="openai-community/gpt2",
-                artifact_revision="main",
-                mount_root="/tmp/agent-pidgin",
-                hf_mount_binary=Path("/Users/test/.local/bin/hf-mount"),
-                hf_token=None,
-            ),
-        )
-
-        self.assertEqual(result["artifact"]["repo_id"], "openai-community/gpt2")
-        self.assertEqual(gateway.calls[0]["revision"], "main")
-        self.assertEqual(gateway.calls[0]["mount_path"], "/tmp/agent-pidgin/gpt2")
+        with self.assertRaisesRegex(ValueError, "artifact"):
+            service.resolve_message(
+                {
+                    "pidgin_version": "0.1",
+                    "message_type": "resolve",
+                    "message_id": "msg-103",
+                    "sender_id": "agent-a",
+                    "receiver_id": "agent-b",
+                    "target_language": "python",
+                    "steps": ["str.trim"],
+                    "created_at": "2026-03-25T10:50:00Z",
+                },
+                config=PidginConfig(
+                    dataset_repo="waynesatz/legacy-dataset",
+                    dataset_revision="legacy-main",
+                    artifact_kind="repo",
+                    artifact_repo="openai-community/gpt2",
+                    artifact_revision="main",
+                    mount_root="/tmp/agent-pidgin",
+                    hf_mount_binary=Path("/Users/test/.local/bin/hf-mount"),
+                    hf_token=None,
+                ),
+            )
+        self.assertEqual(gateway.calls, [])
 
 
 if __name__ == "__main__":

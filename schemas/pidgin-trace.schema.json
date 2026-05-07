@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-pidgin.local/schemas/pidgin-trace.schema.json",
+  "title": "Pidgin Agent Flight Recorder Trace",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pidgin_version",
+    "trace_id",
+    "status",
+    "generated_at",
+    "events"
+  ],
+  "properties": {
+    "pidgin_version": {
+      "const": "0.1"
+    },
+    "trace_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": ["recording", "completed", "blocked"]
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/event"
+      }
+    },
+    "summary": {
+      "type": "object"
+    },
+    "trace_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  },
+  "$defs": {
+    "event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event_id",
+        "event_type",
+        "actor",
+        "timestamp",
+        "summary",
+        "decision",
+        "payload_hash"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parent_event_id": {
+          "type": ["string", "null"]
+        },
+        "event_type": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_.-]*$"
+        },
+        "actor": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "decision": {
+          "enum": [
+            "observed",
+            "resolved",
+            "policy_failed",
+            "drift_detected",
+            "blocked"
+          ]
+        },
+        "payload": {
+          "type": "object"
+        },
+        "payload_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "previous_event_hash": {
+          "type": ["string", "null"],
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "event_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "contract_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "contract": {
+          "type": "object"
+        },
+        "policy_findings": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "resolution_status": {
+          "type": "string"
+        },
+        "receipt_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "semantic_diff": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}

@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 import logging
 import os
 import sys
-from __future__ import annotations
 
 from agent_pidgin.mcp_app import create_mcp_app
 

@@ -1,0 +1,5 @@
+{
+  "left_steps": ["str.trim", "clinical.phi.scrub", "agent.attach_receipts"],
+  "right_steps": ["str.trim", "agent.attach_receipts"],
+  "target_language": "python"
+}

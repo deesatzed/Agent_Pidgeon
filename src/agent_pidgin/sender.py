@@ -27,6 +27,7 @@ class PidginStdioSender:
 
     async def send_round_trip(self, payload: dict[str, Any]) -> dict[str, Any]:
         handshake_payload = {
+            "pidgin_version": str(payload.get("pidgin_version", "0.1")),
             "message_type": "handshake",
             "message_id": str(payload["message_id"]),
             "sender_id": str(payload["sender_id"]),

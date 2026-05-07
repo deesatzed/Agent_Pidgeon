@@ -1,0 +1,3 @@
+I need a safe, auditable text-cleaning plan for a clinical intake note before another agent summarizes it.
+Preserve negation and uncertainty, remove or mask PHI, attach receipts, and require evidence.
+Do not diagnose, treat, triage, or execute code.

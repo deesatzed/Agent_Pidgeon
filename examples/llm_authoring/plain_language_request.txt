@@ -1,0 +1,1 @@
+Clean and normalize a short text workflow. Preserve auditability by attaching receipts. Do not execute raw implementation strings.

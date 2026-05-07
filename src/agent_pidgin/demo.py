@@ -30,6 +30,8 @@ class LocalMountGateway:
 def build_demo_message() -> dict[str, Any]:
     config = PidginConfig.from_env()
     return {
+        "pidgin_version": "0.1",
+        "message_type": "resolve",
         "message_id": f"msg-{uuid4()}",
         "sender_id": "agent-a",
         "receiver_id": "agent-b",

@@ -1,26 +1,68 @@
-# agent-pidgin
+# Agent Pidgin
 
-A small proof of concept for A2A pidgin communication using `hf-mount` and an MCP-style receiver.
+Deterministic semantic contracts, receipts, and flight-recorder traces for autonomous agents.
 
-## What this PoC proves
+Project direction is anchored in [docs/product-framing.md](docs/product-framing.md). Current implementation priorities are tracked in [docs/implementation-roadmap.md](docs/implementation-roadmap.md).
 
-- A structured pidgin message contract
-- A receiver service that mounts a pinned HF artifact and resolves a tiny concept set locally
-- A local round-trip demo aligned to the future repos:
-  - `waynesatz/agent-pidgin-data`
-  - `waynesatz/pidgin-resolver`
+A2A lets agents talk. MCP lets agents use tools. Telemetry records what services did. Agent Pidgin focuses on a different layer: what an agent action means, whether that meaning is allowed, how it changed, and what receipts prove the resolution path.
 
-## Seed pointers
+Agent Pidgin is not an execution engine, A2A clone, MCP clone, or generic observability product. It sits beside those layers as the meaning and provenance layer: semantic pointers, versioned catalogs, policy checks, semantic diffs, receipts, and hash-chained flight-recorder traces.
 
-- `str.trim`
-- `str.lowercase`
-- `str.ascii_only`
+Useful docs:
+
+- [What Agent Pidgin does now](docs/what-agent-pidgin-will-do.md)
+- [Autonomous Agent Flight Recorder](docs/autonomous-agent-flight-recorder.md)
+- [Why this is not telemetry](docs/why-not-telemetry.md)
+- [Why this is not just an auditor agent](docs/why-not-auditor-agent.md)
+- [Architecture](docs/architecture.md)
+
+## What works now
+
+- JSON schemas for resolve messages, handshakes, catalogs, receipts, and AAFR traces.
+- Trusted catalog loading for core, clinical-safety, and agent-ops semantic pointers.
+- Deterministic policy enforcement for pinned revisions, artifact kinds, raw-execution denial, and sensitive pointer receipts.
+- Semantic diffing that flags removed safety primitives, removed control guardrails, artifact drift, and implementation changes.
+- Resolution receipts with pointer, type signature, catalog ID/version/hash, implementation hash, artifact revision, resolver version, timestamp, and receipt ID.
+- CLI commands for validation, policy checks, resolution, catalog introspection, hashing, semantic diffing, and LLM-assisted authoring/review.
+- MCP-style receiver tools and A2A JSON wrapper examples.
+- Autonomous Agent Flight Recorder support for goals, memory updates, proposed tool calls, semantic drift, policy decisions, receipt IDs, and hash-chained traces.
+- Reproducible showpiece demos and automated tests.
+
+## Why a software engineer would want this
+
+Use Agent Pidgin when an agent is about to do something important and a log line is not enough.
+
+A normal service trace can tell you that an agent proposed `email.send_customer`. Agent Pidgin can tell you whether that proposal was represented by a schema-valid contract, which semantic guardrails were present, whether any were removed since the last safe plan, whether the artifact revision was pinned, which catalog defined each pointer, and which receipts prove the resolution.
+
+That matters for agent systems because bugs are no longer only exceptions and latency spikes. They can be subtle changes in intent: a memory update weakens a boundary, a tool proposal drops human review, a contract switches from a pinned revision to `main`, or a model says "everything is fine" while the semantic contract says safety steps disappeared.
+
+## Why this is not telemetry
+
+Telemetry is still useful. Agent Pidgin is not trying to replace OpenTelemetry-style spans, logs, metrics, or traces.
+
+The distinction:
+
+| Telemetry | Agent Pidgin |
+|---|---|
+| Records what happened in services | Checks what an agent action means before or around execution |
+| Tracks spans, logs, metrics, errors, latency | Tracks semantic contracts, policy findings, diffs, catalog resolution, receipts |
+| Accepts event names as labels | Resolves meaning from trusted catalogs |
+| Helps debug runtime behavior | Helps audit agent intent and semantic drift |
+| Usually after-the-fact observation | Can block high-risk proposed actions before tools run |
+
+The intended architecture is complementary: Pidgin can emit or feed telemetry, but its job is deterministic semantic verification.
+
+## Why this is not just another auditor agent
+
+A prompted auditor agent gives a model opinion. Agent Pidgin gives a reproducible verdict with provenance.
+
+LLMs may help author, explain, or review contracts. They do not define pointer truth. The trust-critical path is deterministic: schema validation, policy enforcement, catalog lookup, hashing, semantic diffing, receipt generation, and trace-integrity checks.
 
 ## Logging & Observability
 
-The project now includes structured logging and telemetry:
+The project includes structured service logging:
 - **Enable Debug Logs:** Set `VERBOSE=1` in your environment or use the `--verbose` flag with CLI commands to see detailed debug output on `stderr`.
-- **Telemetry:** Each resolution request now logs its duration in milliseconds (`duration_ms`), allowing for performance monitoring.
+- **Timing:** Each resolution request logs duration in milliseconds (`duration_ms`) for basic performance monitoring.
 - **Safety:** All sensitive fields (like `HF_TOKEN`) are sanitized and never appear in the logs.
 
 ## HF Token Management
@@ -61,9 +103,75 @@ The live integration coverage verifies both:
 PYTHONPATH=src python3 -m agent_pidgin.cli
 ```
 
+## Run contract commands
+
+The CLI now supports schema validation, catalog validation, policy checks, resolution, catalog hashing, and semantic diffs.
+
+```bash
+agent-pidgin validate-message examples/contracts/sample_message.json --json
+agent-pidgin validate-catalog catalogs/core.json --json
+agent-pidgin list-catalog --json
+agent-pidgin show-pointer clinical.phi.scrub --json
+agent-pidgin hash-catalog catalogs/core.json --json
+agent-pidgin policy-check examples/contracts/sample_message.json --json
+agent-pidgin resolve examples/contracts/sample_message.json --json
+agent-pidgin diff examples/contracts/sample_diff.json --json
+```
+
+`resolve` uses the default policy unless `--no-policy` is passed. The default policy rejects unpinned revisions such as `main`, so production-style examples should use a pinned 40-character commit SHA.
+
+Optional LLM-assisted authoring is available through OpenRouter:
+
+```bash
+export OPENROUTER_API_KEY="..."
+export OPENROUTER_MODEL="qwen/qwen3.6-flash"
+agent-pidgin author-contract examples/llm_authoring/plain_language_request.txt \
+  --artifact-repo waynesatz/agent-pidgin-data \
+  --artifact-revision aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
+  --json
+```
+
+LLM-assisted commands draft, explain, or review contracts. They do not define pointer truth and do not bypass schema validation.
+
+## Run the showpiece demo
+
+The showpiece demonstrates the intended product shape end to end: plain-language authoring, schema validation, policy findings, trusted catalog resolution, semantic diff risk review, and receipts.
+
+```bash
+PYTHONPATH=src python3 examples/showpiece_demo/run_showpiece.py --json
+```
+
+Optional live LLM-assisted authoring uses OpenRouter:
+
+```bash
+export OPENROUTER_API_KEY="..."
+export OPENROUTER_MODEL="qwen/qwen3.6-flash"
+PYTHONPATH=src python3 examples/showpiece_demo/run_showpiece.py --live-llm --json
+```
+
+The demo intentionally returns an auditable implementation plan. It does not execute the resolved implementation strings.
+
+## Run the Autonomous Agent Flight Recorder demo
+
+AAFR is the bigger showpiece direction: a replayable semantic audit layer for autonomous agent goals, memory/context updates, proposed tool calls, policy decisions, semantic drift, and receipts.
+
+```bash
+PYTHONPATH=src python3 examples/agent_flight_recorder_demo/run_flight_recorder.py
+```
+
+Full JSON trace:
+
+```bash
+PYTHONPATH=src python3 examples/agent_flight_recorder_demo/run_flight_recorder.py --json
+```
+
+This demo shows a safe agent goal, a corrupted context update, and a later unsafe tool proposal. Pidgeon blocks the unsafe proposal and preserves the trace for replay.
+
+The flight recorder trace is hash-chained. The demo also detects unapproved memory guardrail weakening, high-risk semantic drift, removed control guardrails, and unpinned artifact revisions.
+
 ## Run stdio A2A demo
 
-This launches the MCP receiver over stdio, performs a pidgin handshake, then sends a resolve message through the real MCP client path.
+This launches the MCP receiver over stdio, performs a Pidgin handshake, then sends a resolve message through the real MCP client path.
 
 ```bash
 PYTHONPATH=src python3 scripts/poc_stdio_send.py
@@ -99,5 +207,26 @@ PYTHONPATH=src python3 -m agent_pidgin.receiver_cli
 - `message_type=handshake` requests receiver capabilities and artifact defaults
 - `message_type=resolve` requests pointer resolution
 - resolve payloads may include an `artifact` object with `kind`, `repo`, and `revision`
-- effective artifact precedence is: payload `artifact` -> legacy `dataset_repo` / `dataset_revision` -> receiver config defaults
-- legacy resolve payloads without `message_type` still work and default to `resolve`
+- schema-validated resolve payloads require `pidgin_version`, `message_type`, `artifact`, and non-empty `steps`
+- legacy `dataset_repo` / `dataset_revision` fields may still be included as compatibility metadata, but the `artifact` object is authoritative
+- AAFR trace payloads are validated with `schemas/pidgin-trace.schema.json` and include hash-chained events
+
+## Architecture sketch
+
+```text
+Agent A
+  |
+  | Pidgin semantic contract
+  v
+A2A/MCP transport
+  |
+  v
+Agent Pidgin Receiver
+  |
+  | validate schema
+  | enforce policy
+  | mount artifact
+  | resolve pointers
+  v
+Receipts + resolved implementation plan
+```

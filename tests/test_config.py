@@ -19,6 +19,9 @@ class ConfigTests(unittest.TestCase):
                 "AGENT_PIDGIN_ARTIFACT_REPO",
                 "AGENT_PIDGIN_ARTIFACT_REVISION",
                 "AGENT_PIDGIN_MOUNT_ROOT",
+                "AGENT_PIDGIN_CATALOGS",
+                "AGENT_PIDGIN_POLICY_PATH",
+                "AGENT_PIDGIN_ENFORCE_POLICY",
                 "HF_MOUNT_BINARY",
                 "HF_TOKEN",
             ]:
@@ -34,6 +37,9 @@ class ConfigTests(unittest.TestCase):
             self.assertEqual(config.mount_root, "/tmp/agent-pidgin")
             self.assertEqual(config.hf_mount_binary, Path.home() / ".local/bin/hf-mount")
             self.assertIsNone(config.hf_token)
+            self.assertEqual(config.catalog_paths, ())
+            self.assertIsNone(config.policy_path)
+            self.assertFalse(config.enforce_policy)
         finally:
             os.environ.clear()
             os.environ.update(original)
@@ -47,6 +53,9 @@ class ConfigTests(unittest.TestCase):
             os.environ["AGENT_PIDGIN_ARTIFACT_REPO"] = "openai-community/gpt2"
             os.environ["AGENT_PIDGIN_ARTIFACT_REVISION"] = "v1.0"
             os.environ["AGENT_PIDGIN_MOUNT_ROOT"] = "/tmp/agent-pidgin-future"
+            os.environ["AGENT_PIDGIN_CATALOGS"] = os.pathsep.join(["/tmp/core.json", "/tmp/ops.json"])
+            os.environ["AGENT_PIDGIN_POLICY_PATH"] = "/tmp/policy.json"
+            os.environ["AGENT_PIDGIN_ENFORCE_POLICY"] = "1"
             os.environ["HF_MOUNT_BINARY"] = "/tmp/hf-mount"
             os.environ["HF_TOKEN"] = "hf_test"
 
@@ -60,6 +69,9 @@ class ConfigTests(unittest.TestCase):
             self.assertEqual(config.mount_root, "/tmp/agent-pidgin-future")
             self.assertEqual(config.hf_mount_binary, Path("/tmp/hf-mount"))
             self.assertEqual(config.hf_token, "hf_test")
+            self.assertEqual(config.catalog_paths, (Path("/tmp/core.json"), Path("/tmp/ops.json")))
+            self.assertEqual(config.policy_path, Path("/tmp/policy.json"))
+            self.assertTrue(config.enforce_policy)
         finally:
             os.environ.clear()
             os.environ.update(original)

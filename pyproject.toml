@@ -1,15 +1,17 @@
 [project]
 name = "agent-pidgin"
 version = "0.1.0"
-description = "HF_MOUNT-backed A2A pidgin proof of concept"
+description = "Deterministic semantic contracts, receipts, and flight-recorder traces for autonomous agents"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "fastmcp>=2.0.0",
+    "jsonschema>=4.0.0",
     "ruff>=0.3.0",
 ]
 
 [project.scripts]
+agent-pidgin = "agent_pidgin.cli:main"
 agent-pidgin-demo = "agent_pidgin.cli:main"
 agent-pidgin-stdio-demo = "agent_pidgin.stdio_cli:main"
 agent-pidgin-receiver = "agent_pidgin.receiver_cli:main"
