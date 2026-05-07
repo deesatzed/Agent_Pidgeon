@@ -68,3 +68,4 @@ The current build includes:
 - CLI commands for validation, resolution, policy checks, diffs, catalog introspection, and LLM-assisted contract authoring/review
 - MCP-style tool wrappers and A2A JSON examples around the same service boundary
 - Autonomous Agent Flight Recorder traces with memory guardrail detection, high-risk drift blocking, and hash-chain integrity checks
+- OpenClaw-class sidecar strategy for local-first gateways, channel agents, skill marketplaces, persistent memory, heartbeat tasks, and tool-call preflight

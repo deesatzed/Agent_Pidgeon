@@ -40,33 +40,41 @@ Done:
 - deterministic detection of unapproved memory guardrail weakening
 - high-risk semantic drift blocking for proposed contract events
 - docs explaining why Pidgin is not telemetry and not just another auditor agent
+- OpenClaw-class agent strategy covering local gateways, channel agents, skill marketplaces, memory, heartbeat tasks, tool actions, and enterprise clones
 - unit coverage for schema validation, catalog loading, hashing, receipts, policy, semantic diff, and CLI
 
 ## Tight Next Tasks
 
-1. **AAFR next hardening**
+1. **OpenClaw-class sidecar**
+   - Add catalogs for communications, filesystem, shell, skill marketplace, memory, and finance actions.
+   - Add example contracts under `examples/openclaw_class/`.
+   - Add skill manifest schema and deterministic skill install preflight.
+   - Add CLI commands for `preflight-tool`, `record-memory-update`, and `verify-skill`.
+   - Add docs for deploying Pidgeon as a sidecar beside an OpenClaw-class gateway.
+
+2. **AAFR next hardening**
    - Add stable trace fixtures for the flight recorder demo.
    - Add a richer HTML timeline view beside the terminal report.
    - Add event types for tool result observation and approved memory writes.
    - Add optional trace export compatible with OpenTelemetry-style spans.
    - Add signed trace roots or external append-only storage integration.
 
-2. **Showpiece hardening**
+3. **Showpiece hardening**
    - Add a CLI alias for the showpiece if repeated demo runs need a shorter command.
    - Add a compact human-readable report output beside the full JSON payload.
    - Keep the offline fixture as the deterministic test path and live OpenRouter as optional.
 
-3. **Trust hardening**
+4. **Trust hardening**
    - Add catalog version pinning in contracts.
    - Add external catalog artifact verification.
    - Add optional signed catalog and signed receipt checks.
 
-4. **Authoring review loop**
+5. **Authoring review loop**
    - Let LLM-assisted authoring return explicit rejected/missing safety requirements.
    - Add deterministic guardrail checks for domain-specific required pointers.
    - Keep schema, policy, and catalog resolution as the authority.
 
-5. **Developer experience**
+6. **Developer experience**
    - Add golden JSON fixtures for the showpiece.
    - Add examples for catalog authors adding a new pointer safely.
    - Add a short operator guide for reviewing receipts.

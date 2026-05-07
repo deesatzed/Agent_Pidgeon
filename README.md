@@ -14,6 +14,8 @@ Useful docs:
 - [Autonomous Agent Flight Recorder](docs/autonomous-agent-flight-recorder.md)
 - [Why this is not telemetry](docs/why-not-telemetry.md)
 - [Why this is not just an auditor agent](docs/why-not-auditor-agent.md)
+- [Blog: Catching an Agent Before It Sends the Wrong Email](docs/blog-agent-pidgeon-flight-recorder-demo.md)
+- [OpenClaw-class agent strategy](docs/openclaw-class-agent-strategy.md)
 - [Architecture](docs/architecture.md)
 
 ## What works now
