@@ -75,7 +75,13 @@ Done:
    - Add deterministic guardrail checks for domain-specific required pointers.
    - Keep schema, policy, and catalog resolution as the authority.
 
-6. **Developer experience**
+6. **Domain-boundary guard**
+   - Implement the plan in [plans/2026-05-07-domain-boundary-guard-plan.md](plans/2026-05-07-domain-boundary-guard-plan.md).
+   - Add deterministic prompt-boundary preflight for focused AI apps.
+   - Build the supplement coach showpiece: allowed, constrained, escalated, and blocked prompt drift.
+   - Keep the boundary explicit: Pidgin constrains response authority; it does not provide medical advice.
+
+7. **Developer experience**
    - Add golden JSON fixtures for the showpiece.
    - Add examples for catalog authors adding a new pointer safely.
    - Add a short operator guide for reviewing receipts.
