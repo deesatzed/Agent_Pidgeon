@@ -41,6 +41,20 @@ agent-pidgin show-pointer str.trim --json
 agent-pidgin list-catalog --catalog catalogs/core.json --json
 ```
 
+Sign and verify a catalog for local/shared-secret deployments:
+
+```bash
+AGENT_PIDGIN_CATALOG_HMAC_SECRET="dev-only-example-secret-do-not-use-in-production" \
+  agent-pidgin sign-catalog-hmac catalogs/core.json \
+  --key-id key-agent-pidgeon-labs-2026-001 \
+  --out /tmp/core.signed.json \
+  --json
+
+agent-pidgin verify-catalog-trust /tmp/core.signed.json \
+  --trust-root examples/openclaw_class/catalog_trust_root.json \
+  --json
+```
+
 ## Trust Metadata
 
 Catalog trust checks are deterministic checks. They validate:

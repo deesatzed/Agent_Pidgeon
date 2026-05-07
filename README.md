@@ -117,6 +117,14 @@ agent-pidgin validate-catalog catalogs/core.json --json
 agent-pidgin list-catalog --json
 agent-pidgin show-pointer clinical.phi.scrub --json
 agent-pidgin hash-catalog catalogs/core.json --json
+AGENT_PIDGIN_CATALOG_HMAC_SECRET="dev-only-example-secret-do-not-use-in-production" \
+  agent-pidgin sign-catalog-hmac catalogs/core.json \
+  --key-id key-agent-pidgeon-labs-2026-001 \
+  --out /tmp/core.signed.json \
+  --json
+agent-pidgin verify-catalog-trust /tmp/core.signed.json \
+  --trust-root examples/openclaw_class/catalog_trust_root.json \
+  --json
 agent-pidgin policy-check examples/contracts/sample_message.json --json
 agent-pidgin resolve examples/contracts/sample_message.json --json
 agent-pidgin diff examples/contracts/sample_diff.json --json

@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from agent_pidgin.cli import run
 from agent_pidgin.flight_recorder import FlightRecorder
+from agent_pidgin.hash_utils import hash_catalog_content
 
 
 def write_json(directory: str, name: str, payload: dict) -> str:
@@ -34,6 +35,20 @@ def valid_message(revision: str = "a" * 40) -> dict:
         },
         "steps": ["str.trim"],
         "created_at": "2026-03-25T10:30:00Z",
+    }
+
+
+def valid_catalog() -> dict:
+    return {
+        "catalog_id": "core",
+        "version": "0.1.0",
+        "concepts": [
+            {
+                "pointer": "str.trim",
+                "type_signature": "str -> str",
+                "implementations": {"python": "lambda s: s.strip()"},
+            }
+        ],
     }
 
 
@@ -120,6 +135,99 @@ class CliTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(stderr, "")
         self.assertEqual(result["diff"]["removed"], ["clinical.phi.scrub"])
+
+    def test_sign_and_verify_catalog_hmac_workflow(self) -> None:
+        original = dict(os.environ)
+        try:
+            os.environ["AGENT_PIDGIN_CATALOG_HMAC_SECRET"] = "test-hmac-secret"
+            catalog = valid_catalog()
+            trust_root = {
+                "require_signature": True,
+                "trusted_catalog_ids": ["core"],
+                "trusted_key_ids": ["key-test-001"],
+                "revoked_key_ids": [],
+                "trusted_catalog_hashes": {"core": hash_catalog_content(catalog)},
+                "hmac_sha256_secrets": {"key-test-001": "test-hmac-secret"},
+            }
+            with tempfile.TemporaryDirectory() as tmpdir:
+                catalog_path = write_json(tmpdir, "catalog.json", catalog)
+                signed_path = str(Path(tmpdir) / "catalog.signed.json")
+                trust_path = write_json(tmpdir, "catalog-trust-root.json", trust_root)
+
+                sign_code, sign_stdout, sign_stderr = self.invoke(
+                    [
+                        "sign-catalog-hmac",
+                        catalog_path,
+                        "--key-id",
+                        "key-test-001",
+                        "--out",
+                        signed_path,
+                        "--json",
+                    ]
+                )
+                verify_code, verify_stdout, verify_stderr = self.invoke(
+                    ["verify-catalog-trust", signed_path, "--trust-root", trust_path, "--json"]
+                )
+
+            sign_result = json.loads(sign_stdout)
+            verify_result = json.loads(verify_stdout)
+            self.assertEqual(sign_code, 0)
+            self.assertEqual(sign_stderr, "")
+            self.assertEqual(sign_result["status"], "signed")
+            self.assertEqual(sign_result["signature"]["algorithm"], "hmac-sha256")
+            self.assertEqual(verify_code, 0)
+            self.assertEqual(verify_stderr, "")
+            self.assertEqual(verify_result["status"], "approved")
+            self.assertEqual(verify_result["signature_verification"], "verified")
+        finally:
+            os.environ.clear()
+            os.environ.update(original)
+
+    def test_verify_catalog_trust_blocks_tampered_signed_catalog(self) -> None:
+        original = dict(os.environ)
+        try:
+            os.environ["AGENT_PIDGIN_CATALOG_HMAC_SECRET"] = "test-hmac-secret"
+            catalog = valid_catalog()
+            trust_root = {
+                "require_signature": True,
+                "trusted_catalog_ids": ["core"],
+                "trusted_key_ids": ["key-test-001"],
+                "revoked_key_ids": [],
+                "trusted_catalog_hashes": {"core": hash_catalog_content(catalog)},
+                "hmac_sha256_secrets": {"key-test-001": "test-hmac-secret"},
+            }
+            with tempfile.TemporaryDirectory() as tmpdir:
+                catalog_path = write_json(tmpdir, "catalog.json", catalog)
+                signed_path = Path(tmpdir) / "catalog.signed.json"
+                trust_path = write_json(tmpdir, "catalog-trust-root.json", trust_root)
+
+                self.invoke(
+                    [
+                        "sign-catalog-hmac",
+                        catalog_path,
+                        "--key-id",
+                        "key-test-001",
+                        "--out",
+                        str(signed_path),
+                        "--json",
+                    ]
+                )
+                signed_catalog = json.loads(signed_path.read_text(encoding="utf-8"))
+                signed_catalog["concepts"][0]["type_signature"] = "bytes -> bytes"
+                signed_path.write_text(json.dumps(signed_catalog), encoding="utf-8")
+
+                code, stdout, stderr = self.invoke(
+                    ["verify-catalog-trust", str(signed_path), "--trust-root", trust_path, "--json"]
+                )
+
+            result = json.loads(stdout)
+            self.assertEqual(code, 1)
+            self.assertEqual(stderr, "")
+            self.assertEqual(result["status"], "blocked")
+            self.assertIn("CATALOG_SIGNATURE_INVALID", {finding["code"] for finding in result["findings"]})
+        finally:
+            os.environ.clear()
+            os.environ.update(original)
 
     def test_author_contract_requires_openrouter_key(self) -> None:
         original = dict(os.environ)

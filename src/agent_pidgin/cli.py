@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
 
 from agent_pidgin.catalog import SeedCatalog
+from agent_pidgin.catalog_trust import load_catalog_trust_root, signed_catalog_content, verify_catalog_trust
 from agent_pidgin.config import PidginConfig
 from agent_pidgin.demo import LocalMountGateway, run_local_demo
 from agent_pidgin.flight_recorder import FlightRecorder, build_trace_report
@@ -84,6 +86,20 @@ def build_parser() -> argparse.ArgumentParser:
     hash_catalog.add_argument("path")
     hash_catalog.add_argument("--json", action="store_true")
     hash_catalog.set_defaults(func=cmd_hash_catalog)
+
+    sign_catalog = subparsers.add_parser("sign-catalog-hmac")
+    sign_catalog.add_argument("path")
+    sign_catalog.add_argument("--key-id", required=True)
+    sign_catalog.add_argument("--secret-env", default="AGENT_PIDGIN_CATALOG_HMAC_SECRET")
+    sign_catalog.add_argument("--out", default=None)
+    sign_catalog.add_argument("--json", action="store_true")
+    sign_catalog.set_defaults(func=cmd_sign_catalog_hmac)
+
+    verify_catalog_trust_parser = subparsers.add_parser("verify-catalog-trust")
+    verify_catalog_trust_parser.add_argument("path")
+    verify_catalog_trust_parser.add_argument("--trust-root", required=True)
+    verify_catalog_trust_parser.add_argument("--json", action="store_true")
+    verify_catalog_trust_parser.set_defaults(func=cmd_verify_catalog_trust)
 
     diff = subparsers.add_parser("diff")
     diff.add_argument("path")
@@ -205,6 +221,39 @@ def cmd_hash_catalog(args: argparse.Namespace) -> dict[str, Any]:
         "path": args.path,
         "catalog_hash": hash_catalog_content(payload),
     }
+
+
+def cmd_sign_catalog_hmac(args: argparse.Namespace) -> dict[str, Any]:
+    payload = read_json(args.path)
+    validate_catalog(payload)
+    secret = os.environ.get(args.secret_env, "")
+    if not secret:
+        raise ValueError(f"Catalog HMAC secret not found in environment variable: {args.secret_env}")
+    signed_catalog = signed_catalog_content(payload, key_id=args.key_id, secret=secret)
+    validate_catalog(signed_catalog)
+    output_path = None
+    if args.out:
+        output_path = Path(args.out)
+        output_path.write_text(json.dumps(signed_catalog, indent=2), encoding="utf-8")
+    result: dict[str, Any] = {
+        "status": "signed",
+        "path": args.path,
+        "key_id": args.key_id,
+        "catalog_hash": hash_catalog_content(payload),
+        "signature": signed_catalog["signature"],
+    }
+    if output_path is not None:
+        result["out"] = str(output_path)
+    if args.json:
+        result["catalog"] = signed_catalog
+    return result
+
+
+def cmd_verify_catalog_trust(args: argparse.Namespace) -> dict[str, Any]:
+    payload = read_json(args.path)
+    validate_catalog(payload)
+    trust_root = load_catalog_trust_root(args.trust_root)
+    return verify_catalog_trust(payload, trust_root)
 
 
 def cmd_diff(args: argparse.Namespace) -> dict[str, Any]:
