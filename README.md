@@ -33,6 +33,7 @@ Useful docs:
 - Dependency-free HTTP sidecar for local preflight gates before skill install, memory update, tool call, and trace rendering.
 - Catalog trust helpers for trusted catalog IDs, key revocation, pinned hashes, and HMAC-SHA256 signature verification.
 - Reproducible showpiece demos and automated tests.
+- Deterministic supplement-coach domain-boundary benchmark with status accuracy, autonomy-tier accuracy, and unsafe-prompt catch-rate metrics.
 
 ## Why a software engineer would want this
 
@@ -209,6 +210,12 @@ Run the showpiece regression check used by CI:
 
 ```bash
 PYTHONPATH=src python3 scripts/check_openclaw_showpiece.py
+```
+
+Run the supplement-coach domain-boundary benchmark:
+
+```bash
+PYTHONPATH=src python3 scripts/check_supplement_guard_benchmark.py
 ```
 
 ## Run the showpiece demo

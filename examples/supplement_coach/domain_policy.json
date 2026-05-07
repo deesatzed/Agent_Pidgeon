@@ -1,0 +1,129 @@
+{
+  "domain": "supplement_coach",
+  "description": "Boundary policy for a supplement education assistant. It constrains topic drift; it does not provide medical advice.",
+  "default_status": "allowed",
+  "default_autonomy_tier": "T4_ALLOWED_DOMAIN_RESPONSE",
+  "default_topic": "supplement.education",
+  "rules": [
+    {
+      "rule_id": "SUPPLEMENT_EMERGENCY_SYMPTOM",
+      "topic": "medical.emergency_symptom",
+      "pattern": "\\b(chest pain|trouble breathing|can'?t breathe|cannot breathe|faint(?:ed|ing)?|severe allergic reaction|throat closing|tongue swelling)\\b",
+      "status": "escalate",
+      "autonomy_tier": "T0_BLOCK_OR_ESCALATE",
+      "severity": "error",
+      "assumption": "No emergency symptom is present",
+      "reason": "The prompt includes emergency or potentially urgent symptom language.",
+      "controls": [
+        "do_not_answer_as_supplement_advice",
+        "recommend_urgent_professional_help",
+        "avoid_reassurance"
+      ]
+    },
+    {
+      "rule_id": "SUPPLEMENT_STOP_MEDICATION",
+      "topic": "medical.medication_change",
+      "pattern": "\\b(stop|quit|replace|instead of|come off|wean off)\\b.{0,80}\\b(medication|medicine|statin|insulin|antidepressant|blood pressure|antibiotic|prescription)\\b|\\b(medication|medicine|statin|insulin|antidepressant|blood pressure|antibiotic|prescription)\\b.{0,80}\\b(stop|quit|replace|instead of|come off|wean off)\\b",
+      "status": "blocked",
+      "autonomy_tier": "T0_BLOCK_OR_ESCALATE",
+      "severity": "error",
+      "assumption": "User is not asking to change prescribed medication",
+      "reason": "The prompt asks to stop, replace, or change prescribed medication with supplement guidance.",
+      "controls": [
+        "do_not_recommend_medication_change",
+        "recommend_clinician_or_pharmacist_review"
+      ]
+    },
+    {
+      "rule_id": "SUPPLEMENT_DIAGNOSIS_OR_TREATMENT",
+      "topic": "medical.diagnosis_or_treatment",
+      "pattern": "\\b(diagnose|treat|cure|treatment plan|protocol for|what disease|cancer protocol|reverse my|heal my)\\b",
+      "status": "blocked",
+      "autonomy_tier": "T0_BLOCK_OR_ESCALATE",
+      "severity": "error",
+      "assumption": "Prompt is not asking for diagnosis or disease treatment",
+      "reason": "The prompt asks the supplement coach to act like a diagnosis or treatment system.",
+      "controls": [
+        "do_not_diagnose",
+        "do_not_offer_treatment_protocol",
+        "recommend_professional_review"
+      ]
+    },
+    {
+      "rule_id": "SUPPLEMENT_MEDICATION_INTERACTION",
+      "topic": "supplement.medication_interaction",
+      "pattern": "\\b(with|interact|interaction|safe with|combine|mix)\\b.{0,80}\\b(medication|medicine|prescription|statin|blood pressure|lisinopril|warfarin|eliquis|insulin|antidepressant)\\b|\\b(medication|medicine|prescription|statin|blood pressure|lisinopril|warfarin|eliquis|insulin|antidepressant)\\b.{0,80}\\b(with|interact|interaction|safe with|combine|mix)\\b",
+      "status": "constrained",
+      "autonomy_tier": "T3_CONSTRAINED_RESPONSE",
+      "severity": "warning",
+      "assumption": "Medication interaction risk is absent",
+      "reason": "The prompt asks about supplements with medication, so the answer must stay general and route to clinician or pharmacist review.",
+      "controls": [
+        "give_general_education_only",
+        "do_not_recommend_personalized_dosing",
+        "recommend_clinician_or_pharmacist_review"
+      ]
+    },
+    {
+      "rule_id": "SUPPLEMENT_PREGNANCY_OR_BREASTFEEDING",
+      "topic": "supplement.pregnancy_or_breastfeeding",
+      "pattern": "\\b(pregnant|pregnancy|breastfeeding|breast feeding|nursing|trying to conceive)\\b",
+      "status": "constrained",
+      "autonomy_tier": "T2_SAFE_GENERAL_EDUCATION",
+      "severity": "warning",
+      "assumption": "Pregnancy or breastfeeding context is absent",
+      "reason": "Pregnancy or breastfeeding changes the response boundary for supplement guidance.",
+      "controls": [
+        "give_general_education_only",
+        "do_not_recommend_personalized_dosing",
+        "recommend_clinician_or_pharmacist_review"
+      ]
+    },
+    {
+      "rule_id": "SUPPLEMENT_PERSONALIZED_DOSING",
+      "topic": "supplement.personalized_dosing",
+      "pattern": "\\b(what dose|how much should i take|how many milligrams|mg should i take|personal dose|dose for me)\\b",
+      "status": "constrained",
+      "autonomy_tier": "T3_CONSTRAINED_RESPONSE",
+      "severity": "warning",
+      "assumption": "Prompt is not asking for personalized dosing",
+      "reason": "The prompt asks for personalized dosing rather than general supplement education.",
+      "controls": [
+        "do_not_recommend_personalized_dosing",
+        "give_label_and_general_range_context_only",
+        "recommend_professional_review"
+      ]
+    },
+    {
+      "rule_id": "SUPPLEMENT_CHRONIC_DISEASE_CONTEXT",
+      "topic": "supplement.chronic_disease_context",
+      "pattern": "\\b(kidney disease|liver disease|heart disease|diabetes|blood thinner|high blood pressure|hypertension|cancer|seizure disorder)\\b",
+      "status": "constrained",
+      "autonomy_tier": "T3_CONSTRAINED_RESPONSE",
+      "severity": "warning",
+      "assumption": "No high-risk health context is present",
+      "reason": "The prompt includes a health context that makes supplement guidance more sensitive.",
+      "controls": [
+        "give_general_education_only",
+        "do_not_personalize_to_condition",
+        "recommend_clinician_or_pharmacist_review"
+      ]
+    }
+  ],
+  "conversation_signal_rules": {
+    "prior_medication_context": {
+      "topic": "supplement.prior_medication_context",
+      "pattern": "prior_medication_context",
+      "status": "constrained",
+      "autonomy_tier": "T3_CONSTRAINED_RESPONSE",
+      "severity": "warning",
+      "assumption": "No earlier medication context constrains this prompt",
+      "reason": "Earlier conversation mentioned medication, so later supplement guidance must remain constrained.",
+      "controls": [
+        "carry_forward_medication_context",
+        "do_not_recommend_personalized_dosing",
+        "recommend_clinician_or_pharmacist_review"
+      ]
+    }
+  }
+}
