@@ -44,6 +44,12 @@ Done:
 - deterministic supplement-coach domain-boundary benchmark with measurable status accuracy, tier accuracy, and unsafe-prompt catch rate
 - reusable domain-boundary CLI commands for prompt preflight and policy benchmarking
 - HTTP sidecar prompt preflight endpoint and AAFR prompt-boundary trace event
+- configurable CLI mount gateway selection with simulated default and opt-in `hf-mount`
+- FlightRecorder gateway injection and cached receiver service reuse
+- catalog `safety_sensitive` metadata enforcement for receipt warnings
+- signed skill manifest schema hardening and required trace hash fields
+- HTTP sidecar body-size limit and clearer client/server error split
+- shared protocol version constant in source modules
 - docs explaining why Pidgin is not telemetry and not just another auditor agent
 - OpenClaw-class agent strategy covering local gateways, channel agents, skill marketplaces, memory, heartbeat tasks, tool actions, and enterprise clones
 - unit coverage for schema validation, catalog loading, hashing, receipts, policy, semantic diff, and CLI
@@ -51,11 +57,9 @@ Done:
 ## Tight Next Tasks
 
 1. **OpenClaw-class sidecar**
-   - Add catalogs for communications, filesystem, shell, skill marketplace, memory, and finance actions.
-   - Add example contracts under `examples/openclaw_class/`.
-   - Extend skill preflight into `record_skill_install` flight-recorder events.
-   - Add docs for deploying Pidgeon as a sidecar beside an OpenClaw-class gateway.
-   - Add HTML replay for sidecar traces.
+   - Add signed sidecar deployment examples with real gateway configuration.
+   - Add negative HTTP fixtures for malformed, oversized, and missing-provenance preflights.
+   - Add operator examples for `--gateway hf` and injected mount gateways.
 
 2. **AAFR next hardening**
    - Add stable trace fixtures for the flight recorder demo.
@@ -72,6 +76,8 @@ Done:
    - Add catalog version pinning in contracts.
    - Add external catalog artifact verification.
    - Add optional signed catalog and signed receipt checks.
+   - Add a `pidgin-policy.schema.json` and validate policies at load time.
+   - Replace any remaining extension schemas that allow arbitrary trust-state fields.
 
 5. **Authoring review loop**
    - Let LLM-assisted authoring return explicit rejected/missing safety requirements.
@@ -79,7 +85,7 @@ Done:
    - Keep schema, policy, and catalog resolution as the authority.
 
 6. **Domain-boundary guard**
-   - Implement the plan in [docs/plans/2026-05-07-domain-boundary-guard-plan.md](plans/2026-05-07-domain-boundary-guard-plan.md).
+   - Continue the plan in [docs/plans/2026-05-07-domain-boundary-guard-plan.md](plans/2026-05-07-domain-boundary-guard-plan.md).
    - Keep the supplement-coach assets as a deterministic fixture and future separate product seed after core Pidgin.
    - Use the fixture to show allowed, constrained, escalated, and blocked prompt drift.
    - Keep the boundary explicit: Pidgin constrains response authority; it does not provide medical advice.

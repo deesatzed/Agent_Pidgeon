@@ -6,31 +6,17 @@ from uuid import uuid4
 
 from agent_pidgin.catalog import SeedCatalog
 from agent_pidgin.config import PidginConfig
+from agent_pidgin.constants import PIDGIN_PROTOCOL_VERSION
 from agent_pidgin.hf_mount import HfMountManager
+from agent_pidgin.mount_gateway import LocalMountGateway
 from agent_pidgin.sender import PidginStdioSender
 from agent_pidgin.service import PidginReceiverService
-
-
-class LocalMountGateway:
-    def ensure_repo_mounted(
-        self,
-        repo_id: str,
-        mount_path: str,
-        revision: str,
-        hf_token: str | None = None,
-    ) -> dict[str, Any]:
-        return {
-            "repo_id": repo_id,
-            "mount_path": mount_path,
-            "revision": revision,
-            "status": "simulated-mounted",
-        }
 
 
 def build_demo_message() -> dict[str, Any]:
     config = PidginConfig.from_env()
     return {
-        "pidgin_version": "0.1",
+        "pidgin_version": PIDGIN_PROTOCOL_VERSION,
         "message_type": "resolve",
         "message_id": f"msg-{uuid4()}",
         "sender_id": "agent-a",

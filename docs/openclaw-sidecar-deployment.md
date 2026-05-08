@@ -42,9 +42,10 @@ Endpoints:
 - `POST /v1/preflight/skill`
 - `POST /v1/preflight/memory`
 - `POST /v1/preflight/contract`
+- `POST /v1/preflight/prompt`
 - `POST /v1/render-trace`
 
-Blocked preflights return HTTP `409` with the same JSON verdict body. Malformed payloads return HTTP `400`. The sidecar is preflight-only and has no endpoint for executing skills, tools, shell commands, or sends.
+Blocked preflights return HTTP `409` with the same JSON verdict body. Malformed payloads return HTTP `400`. Request bodies over 1 MiB return HTTP `413`. The sidecar is preflight-only and has no endpoint for executing skills, tools, shell commands, or sends.
 
 Run the gateway adapter through the HTTP sidecar:
 
@@ -86,6 +87,11 @@ External tools and shell commands should be passed as Pidgeon resolve contracts:
   "tool_name": "email.send_customer",
   "correlation_id": "gateway-email-001",
   "contract": {
+    "artifact": {
+      "kind": "repo",
+      "repo": "waynesatz/agent-pidgin-data",
+      "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
     "steps": [
       "comm.draft_external_message",
       "comm.require_recipient_verification",

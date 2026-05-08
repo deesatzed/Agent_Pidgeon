@@ -4,13 +4,15 @@ import argparse
 import json
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from agent_pidgin.catalog import SeedCatalog
 from agent_pidgin.catalog_trust import load_catalog_trust_root, signed_catalog_content, verify_catalog_trust
 from agent_pidgin.config import PidginConfig
-from agent_pidgin.demo import LocalMountGateway, run_local_demo
+from agent_pidgin.constants import PIDGIN_PROTOCOL_VERSION
+from agent_pidgin.demo import run_local_demo
 from agent_pidgin.domain_guard import (
     benchmark_prompt_boundaries,
     evaluate_prompt_boundary,
@@ -21,6 +23,7 @@ from agent_pidgin.flight_recorder import FlightRecorder, build_trace_report
 from agent_pidgin.hash_utils import hash_catalog_content
 from agent_pidgin.html_report import build_trace_html
 from agent_pidgin.llm_authoring import draft_contract, explain_contract, review_contract
+from agent_pidgin.mount_gateway import build_mount_gateway
 from agent_pidgin.policy import enforce_policy, findings_to_dicts, has_policy_errors, load_policy
 from agent_pidgin.protocol import PidginMessage
 from agent_pidgin.schema_validator import validate_catalog, validate_pidgin_message, validate_pidgin_trace
@@ -88,6 +91,7 @@ def build_parser() -> argparse.ArgumentParser:
     resolve.add_argument("--catalog-trust-root", default=None)
     resolve.add_argument("--policy", default=None)
     resolve.add_argument("--no-policy", action="store_true")
+    resolve.add_argument("--gateway", choices=["simulated", "hf", "auto"], default="simulated")
     resolve.add_argument("--json", action="store_true")
     resolve.set_defaults(func=cmd_resolve)
 
@@ -119,6 +123,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     policy_check = subparsers.add_parser("policy-check")
     policy_check.add_argument("path")
+    policy_check.add_argument("--catalog", action="append", default=[])
+    policy_check.add_argument("--catalog-trust-root", default=None)
     policy_check.add_argument("--policy", default=None)
     policy_check.add_argument("--json", action="store_true")
     policy_check.set_defaults(func=cmd_policy_check)
@@ -235,7 +241,7 @@ def cmd_resolve(args: argparse.Namespace) -> dict[str, Any]:
     policy = None if args.no_policy else load_policy(args.policy)
     config = PidginConfig.from_env()
     service = PidginReceiverService(
-        mount_gateway=LocalMountGateway(),
+        mount_gateway=build_mount_gateway(config, mode=args.gateway),
         catalog=load_catalog_from_args(args),
         default_mount_root=config.mount_root,
     )
@@ -297,7 +303,7 @@ def cmd_policy_check(args: argparse.Namespace) -> dict[str, Any]:
     payload = read_json(args.path)
     validate_pidgin_message(payload)
     message = PidginMessage.from_dict(payload)
-    findings = enforce_policy(message, load_policy(args.policy))
+    findings = enforce_policy(message, load_policy(args.policy), catalog=load_catalog_from_args(args))
     status = "policy_failed" if has_policy_errors(findings) else "policy_passed"
     return {
         "status": status,
@@ -477,20 +483,24 @@ def contract_from_preflight_payload(payload: dict[str, Any]) -> dict[str, Any]:
     if "steps" not in contract:
         raise ValueError("preflight contract object must include steps")
     config = PidginConfig.from_env()
+    artifact = contract.get("artifact", payload.get("artifact"))
+    if not isinstance(artifact, dict):
+        raise ValueError("preflight contract object must include artifact provenance")
+    created_at = payload.get("created_at") or datetime.now(timezone.utc).isoformat()
     return {
-        "pidgin_version": "0.1",
+        "pidgin_version": PIDGIN_PROTOCOL_VERSION,
         "message_type": "resolve",
         "message_id": str(payload.get("correlation_id", "msg-openclaw-preflight")),
         "sender_id": str(payload.get("actor", "openclaw-agent")),
         "receiver_id": "agent-pidgeon",
         "target_language": str(contract.get("target_language", "python")),
         "artifact": {
-            "kind": str(contract.get("artifact", {}).get("kind", config.artifact_kind)),
-            "repo": str(contract.get("artifact", {}).get("repo", config.artifact_repo)),
-            "revision": str(contract.get("artifact", {}).get("revision", "a" * 40)),
+            "kind": str(artifact.get("kind", config.artifact_kind)),
+            "repo": str(artifact.get("repo", config.artifact_repo)),
+            "revision": str(artifact.get("revision", config.artifact_revision)),
         },
         "steps": contract["steps"],
-        "created_at": str(payload.get("created_at", "2026-05-07T12:00:00Z")),
+        "created_at": str(created_at),
         "metadata": {
             "source": "openclaw_class_preflight",
             "channel": payload.get("channel", "local"),

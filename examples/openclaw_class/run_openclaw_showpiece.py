@@ -115,6 +115,7 @@ def _unsafe_email_contract(payload: dict[str, Any]) -> dict[str, Any]:
     unsafe_payload = dict(payload)
     unsafe_payload["correlation_id"] = "openclaw-email-unsafe-001"
     unsafe_payload["contract"] = {
+        "artifact": payload["contract"]["artifact"],
         "steps": [
             "comm.send_external_message",
         ],

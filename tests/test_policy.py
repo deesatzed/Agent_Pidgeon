@@ -55,6 +55,15 @@ class PolicyTests(unittest.TestCase):
         self.assertTrue(has_policy_errors(findings))
         self.assertIn("UNKNOWN_ARTIFACT_KIND", {finding.code for finding in findings})
 
+    def test_catalog_safety_sensitive_metadata_triggers_receipt_warning(self) -> None:
+        payload = message_payload()
+        payload["steps"] = ["comm.send_external_message"]
+        message = PidginMessage.from_dict(payload)
+
+        findings = enforce_policy(message, load_policy(), catalog=SeedCatalog.load_default())
+
+        self.assertIn("SENSITIVE_POINTER_RECEIPTS_REQUIRED", {finding.code for finding in findings})
+
     def test_policy_failure_prevents_mount_and_returns_structured_response(self) -> None:
         gateway = RecordingMountGateway()
         service = PidginReceiverService(

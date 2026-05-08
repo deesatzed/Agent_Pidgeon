@@ -6,6 +6,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
+from agent_pidgin.constants import PIDGIN_PROTOCOL_VERSION
 from agent_pidgin.hash_utils import sha256_digest
 
 STATUS_PRIORITY = {
@@ -111,7 +112,7 @@ def evaluate_prompt_boundary(
         "receipt": {
             "policy_hash": sha256_digest(domain_policy),
             "rule_ids": [finding.rule_id for finding in findings],
-            "resolver_version": "0.1",
+            "resolver_version": PIDGIN_PROTOCOL_VERSION,
         },
     }
     return report

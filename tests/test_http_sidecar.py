@@ -1,11 +1,12 @@
 import sys
 import unittest
+from io import BytesIO
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from agent_pidgin.flight_recorder import FlightRecorder
-from agent_pidgin.http_sidecar import SidecarRouter
+from agent_pidgin.http_sidecar import MAX_REQUEST_BODY_BYTES, PayloadTooLargeError, SidecarRouter, create_handler
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -71,6 +72,11 @@ class HttpSidecarTests(unittest.TestCase):
                 "event_type": "agent.tool.proposed_call",
                 "tool_name": "email.send_customer",
                 "contract": {
+                    "artifact": {
+                        "kind": "repo",
+                        "repo": "waynesatz/agent-pidgin-data",
+                        "revision": "a" * 40,
+                    },
                     "steps": [
                         "comm.draft_external_message",
                         "comm.require_human_approval",
@@ -105,6 +111,15 @@ class HttpSidecarTests(unittest.TestCase):
         self.assertEqual(result["autonomy_tier"], "T0_BLOCK_OR_ESCALATE")
         self.assertEqual(result["event"]["event_type"], "agent.prompt.boundary_check")
         self.assertEqual(result["trace"]["summary"]["blocked_event_count"], 1)
+
+    def test_http_handler_rejects_oversized_json_body_before_read(self) -> None:
+        handler_type = create_handler()
+        handler = object.__new__(handler_type)
+        handler.headers = {"content-length": str(MAX_REQUEST_BODY_BYTES + 1)}
+        handler.rfile = BytesIO(b"{}")
+
+        with self.assertRaises(PayloadTooLargeError):
+            handler._read_json()
 
 
 if __name__ == "__main__":

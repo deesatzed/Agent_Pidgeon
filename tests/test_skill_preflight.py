@@ -38,6 +38,7 @@ class SkillPreflightTests(unittest.TestCase):
                 "version": "1.0.0",
                 "publisher": {"id": "trusted", "name": "Trusted Publisher"},
                 "signed": True,
+                "signature": {"key_id": "key-trusted-001", "algorithm": "ed25519", "value": "test-signature"},
                 "permissions": [
                     {
                         "kind": "network",
@@ -60,7 +61,7 @@ class SkillPreflightTests(unittest.TestCase):
                 "version": "1.0.0",
                 "publisher": {"id": "community", "name": "Community"},
                 "signed": True,
-                "signature": {"key_id": "key-community-001"},
+                "signature": {"key_id": "key-community-001", "algorithm": "ed25519", "value": "test-signature"},
                 "permissions": [
                     {
                         "kind": "network",
@@ -89,7 +90,7 @@ class SkillPreflightTests(unittest.TestCase):
                 "version": "1.0.0",
                 "publisher": {"id": "trusted", "name": "Trusted Publisher"},
                 "signed": True,
-                "signature": {"key_id": "key-trusted-001"},
+                "signature": {"key_id": "key-trusted-001", "algorithm": "ed25519", "value": "test-signature"},
                 "permissions": [
                     {
                         "kind": "network",

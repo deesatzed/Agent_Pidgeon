@@ -12,6 +12,15 @@ from agent_pidgin.schema_validator import validate_pidgin_trace
 ROOT = Path(__file__).resolve().parents[1]
 
 
+class RecordingMountGateway:
+    def __init__(self) -> None:
+        self.calls = []
+
+    def ensure_repo_mounted(self, repo_id: str, mount_path: str, revision: str, hf_token: str | None = None) -> dict:
+        self.calls.append({"repo_id": repo_id, "mount_path": mount_path, "revision": revision})
+        return {"repo_id": repo_id, "mount_path": mount_path, "revision": revision, "status": "mounted"}
+
+
 class FlightRecorderTests(unittest.TestCase):
     def test_record_event_builds_valid_trace(self) -> None:
         recorder = FlightRecorder(trace_id="trace-test-001")
@@ -97,6 +106,23 @@ class FlightRecorderTests(unittest.TestCase):
         self.assertEqual(event["receipts"][0]["receipt_id"], event["receipt_ids"][0])
         self.assertIn("catalog_id", event["receipts"][0])
         self.assertEqual(event["policy_findings"][0]["code"], "RAW_EXECUTION_DENIED")
+
+    def test_contract_event_uses_injected_mount_gateway(self) -> None:
+        gateway = RecordingMountGateway()
+        recorder = FlightRecorder(trace_id="trace-test-gateway", mount_gateway=gateway)
+        contract = json.loads(
+            (ROOT / "examples/agent_flight_recorder_demo/safe_tool_contract.json").read_text(encoding="utf-8")
+        )
+
+        event = recorder.record_contract_event(
+            event_type="agent.tool.proposed_call",
+            actor="agent-a",
+            summary="Propose safe call.",
+            contract=contract,
+        )
+
+        self.assertEqual(event["decision"], "resolved")
+        self.assertEqual(gateway.calls[0]["revision"], "a" * 40)
 
     def test_skill_install_records_blocked_manifest_event(self) -> None:
         recorder = FlightRecorder(trace_id="trace-test-skill")

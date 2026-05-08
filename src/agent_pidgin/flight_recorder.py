@@ -7,9 +7,10 @@ from uuid import uuid4
 
 from agent_pidgin.catalog import SeedCatalog
 from agent_pidgin.config import PidginConfig
-from agent_pidgin.demo import LocalMountGateway
+from agent_pidgin.constants import PIDGIN_PROTOCOL_VERSION
 from agent_pidgin.domain_guard import evaluate_prompt_boundary
 from agent_pidgin.hash_utils import sha256_digest
+from agent_pidgin.mount_gateway import build_mount_gateway
 from agent_pidgin.policy import PidginPolicy, load_policy
 from agent_pidgin.schema_validator import validate_pidgin_message, validate_pidgin_trace
 from agent_pidgin.semantic_diff import diff_contracts
@@ -27,7 +28,10 @@ class FlightRecorder:
     catalog: SeedCatalog = field(default_factory=SeedCatalog.load_default)
     policy: PidginPolicy = field(default_factory=load_policy)
     config: PidginConfig = field(default_factory=PidginConfig.from_env)
+    mount_gateway: Any | None = None
+    mount_gateway_mode: str = "simulated"
     events: list[dict[str, Any]] = field(default_factory=list)
+    _cached_service: PidginReceiverService | None = field(default=None, init=False, repr=False)
 
     def record_event(
         self,
@@ -200,7 +204,7 @@ class FlightRecorder:
             "blocked" if any(event["decision"] == "blocked" for event in self.events) else "completed"
         )
         trace = {
-            "pidgin_version": "0.1",
+            "pidgin_version": PIDGIN_PROTOCOL_VERSION,
             "trace_id": self.trace_id,
             "status": trace_status,
             "generated_at": utc_now(),
@@ -248,11 +252,13 @@ class FlightRecorder:
         return lines
 
     def _service(self) -> PidginReceiverService:
-        return PidginReceiverService(
-            mount_gateway=LocalMountGateway(),
-            catalog=self.catalog,
-            default_mount_root=self.config.mount_root,
-        )
+        if self._cached_service is None:
+            self._cached_service = PidginReceiverService(
+                mount_gateway=self.mount_gateway or build_mount_gateway(self.config, mode=self.mount_gateway_mode),
+                catalog=self.catalog,
+                default_mount_root=self.config.mount_root,
+            )
+        return self._cached_service
 
     def _append_event(self, event: dict[str, Any]) -> dict[str, Any]:
         event["previous_event_hash"] = self.events[-1]["event_hash"] if self.events else None

@@ -3,6 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Callable
 
+from agent_pidgin.constants import PIDGIN_PROTOCOL_VERSION
+
 
 class PidginStdioSender:
     def __init__(self, client_factory: Callable[[], Any] | None = None) -> None:
@@ -27,7 +29,7 @@ class PidginStdioSender:
 
     async def send_round_trip(self, payload: dict[str, Any]) -> dict[str, Any]:
         handshake_payload = {
-            "pidgin_version": str(payload.get("pidgin_version", "0.1")),
+            "pidgin_version": str(payload.get("pidgin_version", PIDGIN_PROTOCOL_VERSION)),
             "message_type": "handshake",
             "message_id": str(payload["message_id"]),
             "sender_id": str(payload["sender_id"]),

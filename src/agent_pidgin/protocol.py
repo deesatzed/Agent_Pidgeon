@@ -4,6 +4,8 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
+from agent_pidgin.constants import PIDGIN_PROTOCOL_VERSION
+
 # Hugging Face repo IDs are typically namespace/repo-name or just repo-name.
 # Safe characters: alphanumeric, dots, dashes, underscores, and forward slashes.
 REPO_ID_PATTERN = re.compile(r"^[a-zA-Z0-9._-]+(/[a-zA-Z0-9._-]+)?$")
@@ -67,12 +69,12 @@ class PidginHandshake:
         missing = [field for field in required_fields if field not in payload]
         if missing:
             raise ValueError(f"Missing required fields: {', '.join(missing)}")
-        if str(payload["pidgin_version"]) != "0.1":
-            raise ValueError("pidgin_version must be 0.1")
+        if str(payload["pidgin_version"]) != PIDGIN_PROTOCOL_VERSION:
+            raise ValueError(f"pidgin_version must be {PIDGIN_PROTOCOL_VERSION}")
         if str(payload["message_type"]) != "handshake":
             raise ValueError("message_type must be handshake")
         return cls(
-            pidgin_version="0.1",
+            pidgin_version=PIDGIN_PROTOCOL_VERSION,
             message_type="handshake",
             message_id=str(payload["message_id"]),
             sender_id=str(payload["sender_id"]),
@@ -103,8 +105,8 @@ class PidginMessage:
     def from_dict(cls, payload: dict[str, Any]) -> "PidginMessage":
         if "pidgin_version" not in payload:
             raise ValueError("Missing required fields: pidgin_version")
-        if str(payload["pidgin_version"]) != "0.1":
-            raise ValueError("pidgin_version must be 0.1")
+        if str(payload["pidgin_version"]) != PIDGIN_PROTOCOL_VERSION:
+            raise ValueError(f"pidgin_version must be {PIDGIN_PROTOCOL_VERSION}")
 
         message_type = str(payload.get("message_type", "resolve"))
         if message_type != "resolve":
@@ -134,7 +136,7 @@ class PidginMessage:
             artifact = PidginArtifactTarget.from_dict(artifact_payload)
 
         return cls(
-            pidgin_version="0.1",
+            pidgin_version=PIDGIN_PROTOCOL_VERSION,
             message_type=message_type,
             message_id=str(payload["message_id"]),
             sender_id=str(payload["sender_id"]),

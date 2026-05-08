@@ -13,6 +13,8 @@ from agent_pidgin.html_report import build_trace_html
 from agent_pidgin.schema_validator import validate_pidgin_trace
 from agent_pidgin.telemetry import build_otlp_trace_export
 
+MAX_REQUEST_BODY_BYTES = 1_048_576
+
 
 class SidecarRouter:
     def handle(self, method: str, path: str, payload: dict[str, Any] | None = None) -> tuple[int, dict[str, Any]]:
@@ -36,12 +38,12 @@ class SidecarRouter:
                 return _status_for_result(_preflight_prompt(body))
             if path == "/v1/render-trace":
                 return HTTPStatus.OK, _render_trace(body)
-        except Exception as exc:
+        except ValueError as exc:
             return HTTPStatus.BAD_REQUEST, {"status": "error", "error": str(exc)}
         return HTTPStatus.NOT_FOUND, {"status": "error", "error": "unknown endpoint"}
 
 
-def create_handler(router: SidecarRouter | None = None) -> type[BaseHTTPRequestHandler]:
+def create_handler(router: SidecarRouter | None = None) -> type[BaseHTTPRequestHandler]:  # noqa: C901
     active_router = router or SidecarRouter()
 
     class AgentPidgeonSidecarHandler(BaseHTTPRequestHandler):
@@ -59,15 +61,30 @@ def create_handler(router: SidecarRouter | None = None) -> type[BaseHTTPRequestH
         def _handle(self) -> None:
             payload = None
             if self.command == "POST":
-                payload = self._read_json()
+                try:
+                    payload = self._read_json()
+                except PayloadTooLargeError as exc:
+                    self._write_json(HTTPStatus.REQUEST_ENTITY_TOO_LARGE, {"status": "error", "error": str(exc)})
+                    return
+                except ValueError as exc:
+                    self._write_json(HTTPStatus.BAD_REQUEST, {"status": "error", "error": str(exc)})
+                    return
                 if payload is None:
                     self._write_json(HTTPStatus.BAD_REQUEST, {"status": "error", "error": "invalid JSON body"})
                     return
-            status, response = active_router.handle(self.command, self.path.split("?", 1)[0], payload)
+            try:
+                status, response = active_router.handle(self.command, self.path.split("?", 1)[0], payload)
+            except Exception:
+                status, response = HTTPStatus.INTERNAL_SERVER_ERROR, {"status": "error", "error": "internal error"}
             self._write_json(status, response)
 
         def _read_json(self) -> dict[str, Any] | None:
-            content_length = int(self.headers.get("content-length", "0"))
+            try:
+                content_length = int(self.headers.get("content-length", "0"))
+            except ValueError as exc:
+                raise ValueError("invalid Content-Length header") from exc
+            if content_length > MAX_REQUEST_BODY_BYTES:
+                raise PayloadTooLargeError(f"request body exceeds {MAX_REQUEST_BODY_BYTES} bytes")
             raw_body = self.rfile.read(content_length) if content_length else b"{}"
             try:
                 payload = json.loads(raw_body.decode("utf-8"))
@@ -84,6 +101,10 @@ def create_handler(router: SidecarRouter | None = None) -> type[BaseHTTPRequestH
             self.wfile.write(body)
 
     return AgentPidgeonSidecarHandler
+
+
+class PayloadTooLargeError(ValueError):
+    pass
 
 
 def run_server(host: str = "127.0.0.1", port: int = 8765) -> None:

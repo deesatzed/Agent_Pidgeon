@@ -9,7 +9,8 @@
     "trace_id",
     "status",
     "generated_at",
-    "events"
+    "events",
+    "trace_hash"
   ],
   "properties": {
     "pidgin_version": {
@@ -51,7 +52,8 @@
         "timestamp",
         "summary",
         "decision",
-        "payload_hash"
+        "payload_hash",
+        "event_hash"
       ],
       "properties": {
         "event_id": {

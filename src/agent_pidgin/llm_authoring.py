@@ -10,6 +10,7 @@ from typing import Any, Callable
 from uuid import uuid4
 
 from agent_pidgin.catalog import SeedCatalog
+from agent_pidgin.constants import PIDGIN_PROTOCOL_VERSION
 from agent_pidgin.schema_validator import validate_pidgin_message
 
 DEFAULT_OPENROUTER_MODEL = "qwen/qwen3.6-flash"
@@ -101,7 +102,7 @@ def draft_contract(
         raise ValueError("LLM authoring did not propose any known catalog pointers")
 
     contract = {
-        "pidgin_version": "0.1",
+        "pidgin_version": PIDGIN_PROTOCOL_VERSION,
         "message_type": "resolve",
         "message_id": f"msg-{uuid4()}",
         "sender_id": sender_id,

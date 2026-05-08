@@ -6,7 +6,7 @@ from typing import Any
 
 from agent_pidgin.catalog import SeedCatalog
 from agent_pidgin.config import PidginConfig
-from agent_pidgin.demo import LocalMountGateway
+from agent_pidgin.mount_gateway import LocalMountGateway
 from agent_pidgin.policy import load_policy
 from agent_pidgin.service import PidginReceiverService
 

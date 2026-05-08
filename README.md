@@ -85,6 +85,8 @@ For maximum security, the project supports three ways to handle Hugging Face tok
 python3 -m unittest discover -s tests -v
 ```
 
+CI also runs coverage and currently fails under `85%` line coverage.
+
 ## Run opt-in stdio integration tests
 
 These tests use the real FastMCP stdio path and `hf-mount`, so they are skipped by default unless explicitly enabled.
@@ -134,10 +136,12 @@ agent-pidgin list-catalog \
   --json
 agent-pidgin policy-check examples/contracts/sample_message.json --json
 agent-pidgin resolve examples/contracts/sample_message.json --json
+agent-pidgin resolve examples/contracts/sample_message.json --gateway hf --json
 agent-pidgin diff examples/contracts/sample_diff.json --json
 ```
 
 `resolve` uses the default policy unless `--no-policy` is passed. The default policy rejects unpinned revisions such as `main`, so production-style examples should use a pinned 40-character commit SHA.
+By default, `resolve` uses the explicit simulated gateway for deterministic preflight. Pass `--gateway hf` to use `hf-mount`; pass `--gateway auto` only when local environments should select `hf-mount` if the configured binary exists.
 
 Optional LLM-assisted authoring is available through OpenRouter:
 

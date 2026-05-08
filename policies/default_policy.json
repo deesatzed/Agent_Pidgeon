@@ -3,7 +3,7 @@
   "allow_branch_revision": false,
   "allowed_artifact_kinds": ["hf", "local", "repo"],
   "allowed_repos": [],
-  "deny_raw_execution": true,
+  "warn_raw_execution": true,
   "require_receipts": true,
   "sensitive_pointer_prefixes": ["clinical.", "phi."]
 }

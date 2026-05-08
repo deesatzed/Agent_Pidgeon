@@ -134,6 +134,7 @@ class SchemaValidationTests(unittest.TestCase):
                     "name": "Community",
                 },
                 "signed": True,
+                "signature": {"key_id": "key-community-001", "algorithm": "ed25519", "value": "test-signature"},
                 "permissions": [
                     {
                         "kind": "email",
@@ -144,6 +145,54 @@ class SchemaValidationTests(unittest.TestCase):
                 "capabilities": ["comm.send_external_message"],
             }
         )
+
+    def test_validate_skill_manifest_rejects_signed_without_signature(self) -> None:
+        with self.assertRaisesRegex(ValueError, "signature"):
+            validate_skill_manifest(
+                {
+                    "skill_id": "community/test-skill",
+                    "name": "Test Skill",
+                    "version": "0.1.0",
+                    "publisher": {
+                        "id": "community",
+                        "name": "Community",
+                    },
+                    "signed": True,
+                    "permissions": [
+                        {
+                            "kind": "email",
+                            "target": "customer",
+                            "access": "send",
+                        }
+                    ],
+                    "capabilities": ["comm.send_external_message"],
+                }
+            )
+
+    def test_validate_pidgin_trace_rejects_event_without_hash(self) -> None:
+        trace = {
+            "pidgin_version": "0.1",
+            "trace_id": "trace-001",
+            "status": "completed",
+            "generated_at": "2026-05-07T12:00:00Z",
+            "events": [
+                {
+                    "event_id": "evt-0001",
+                    "parent_event_id": None,
+                    "event_type": "agent.goal.received",
+                    "actor": "agent-a",
+                    "timestamp": "2026-05-07T12:00:00Z",
+                    "summary": "Receive goal.",
+                    "decision": "observed",
+                    "payload": {"goal": "test"},
+                    "payload_hash": "a" * 64,
+                    "previous_event_hash": None,
+                }
+            ],
+            "trace_hash": "c" * 64,
+        }
+        with self.assertRaisesRegex(ValueError, "event_hash"):
+            validate_pidgin_trace(trace)
 
 
 if __name__ == "__main__":

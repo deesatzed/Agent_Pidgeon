@@ -83,6 +83,11 @@ class OfflineOpenClawPlanner:
                     "tool_name": "email.send_customer",
                     "correlation_id": "gateway-email-001",
                     "contract": {
+                        "artifact": {
+                            "kind": "repo",
+                            "repo": "waynesatz/agent-pidgin-data",
+                            "revision": "a" * 40,
+                        },
                         "steps": [
                             "comm.draft_external_message",
                             "comm.require_recipient_verification",
@@ -111,6 +116,11 @@ class OfflineOpenClawPlanner:
                     "channel": "discord:dev-ops",
                     "correlation_id": "gateway-shell-001",
                     "contract": {
+                        "artifact": {
+                            "kind": "repo",
+                            "repo": "waynesatz/agent-pidgin-data",
+                            "revision": "a" * 40,
+                        },
                         "steps": [
                             "shell.propose_command",
                             "shell.require_sandbox",

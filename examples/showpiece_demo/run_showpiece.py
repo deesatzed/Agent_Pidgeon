@@ -8,8 +8,8 @@ from typing import Any
 
 from agent_pidgin.catalog import SeedCatalog
 from agent_pidgin.config import PidginConfig
-from agent_pidgin.demo import LocalMountGateway
 from agent_pidgin.llm_authoring import draft_contract
+from agent_pidgin.mount_gateway import LocalMountGateway
 from agent_pidgin.policy import enforce_policy, findings_to_dicts, load_policy
 from agent_pidgin.protocol import PidginMessage
 from agent_pidgin.schema_validator import validate_pidgin_message

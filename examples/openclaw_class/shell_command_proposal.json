@@ -4,6 +4,11 @@
   "channel": "discord:dev-ops",
   "correlation_id": "openclaw-shell-001",
   "contract": {
+    "artifact": {
+      "kind": "repo",
+      "repo": "waynesatz/agent-pidgin-data",
+      "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
     "steps": [
       "shell.propose_command",
       "shell.require_sandbox",

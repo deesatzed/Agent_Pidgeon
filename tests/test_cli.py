@@ -439,7 +439,7 @@ class CliTests(unittest.TestCase):
             "version": "0.1.0",
             "publisher": {"id": "community", "name": "Community"},
             "signed": True,
-            "signature": {"key_id": "key-community-001"},
+            "signature": {"key_id": "key-community-001", "algorithm": "ed25519", "value": "test-signature"},
             "permissions": [{"kind": "network", "target": "tickets.internal", "access": "read"}],
             "capabilities": ["json.parse"],
         }

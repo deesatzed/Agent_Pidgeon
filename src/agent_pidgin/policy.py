@@ -19,7 +19,7 @@ class PidginPolicy:
     allow_branch_revision: bool
     allowed_artifact_kinds: tuple[str, ...]
     allowed_repos: tuple[str, ...]
-    deny_raw_execution: bool
+    warn_raw_execution: bool
     require_receipts: bool
     sensitive_pointer_prefixes: tuple[str, ...]
 
@@ -30,7 +30,7 @@ class PidginPolicy:
             allow_branch_revision=bool(payload.get("allow_branch_revision", False)),
             allowed_artifact_kinds=tuple(str(kind) for kind in payload.get("allowed_artifact_kinds", [])),
             allowed_repos=tuple(str(repo) for repo in payload.get("allowed_repos", [])),
-            deny_raw_execution=bool(payload.get("deny_raw_execution", True)),
+            warn_raw_execution=bool(payload.get("warn_raw_execution", payload.get("deny_raw_execution", True))),
             require_receipts=bool(payload.get("require_receipts", True)),
             sensitive_pointer_prefixes=tuple(str(prefix) for prefix in payload.get("sensitive_pointer_prefixes", [])),
         )
@@ -56,7 +56,7 @@ def load_policy(path: str | Path | None = None) -> PidginPolicy:
         return PidginPolicy.from_dict(json.load(policy_file))
 
 
-def enforce_policy(message: PidginMessage, policy: PidginPolicy) -> list[PolicyFinding]:
+def enforce_policy(message: PidginMessage, policy: PidginPolicy, catalog: Any | None = None) -> list[PolicyFinding]:
     findings: list[PolicyFinding] = []
 
     if message.artifact is None:
@@ -105,7 +105,7 @@ def enforce_policy(message: PidginMessage, policy: PidginPolicy) -> list[PolicyF
             )
         )
 
-    if policy.deny_raw_execution:
+    if policy.warn_raw_execution:
         findings.append(
             PolicyFinding(
                 severity="warning",
@@ -116,7 +116,7 @@ def enforce_policy(message: PidginMessage, policy: PidginPolicy) -> list[PolicyF
             )
         )
 
-    if policy.require_receipts and _uses_sensitive_pointer(message, policy):
+    if policy.require_receipts and _uses_sensitive_pointer(message, policy, catalog=catalog):
         findings.append(
             PolicyFinding(
                 severity="warning",
@@ -144,5 +144,11 @@ def is_common_branch_revision(revision: str) -> bool:
     return revision.lower() in COMMON_BRANCH_REVISIONS
 
 
-def _uses_sensitive_pointer(message: PidginMessage, policy: PidginPolicy) -> bool:
-    return any(step.startswith(prefix) for step in message.steps for prefix in policy.sensitive_pointer_prefixes)
+def _uses_sensitive_pointer(message: PidginMessage, policy: PidginPolicy, catalog: Any | None = None) -> bool:
+    for step in message.steps:
+        if any(step.startswith(prefix) for prefix in policy.sensitive_pointer_prefixes):
+            return True
+        concept = getattr(catalog, "concepts", {}).get(step) if catalog is not None else None
+        if isinstance(concept, dict) and concept.get("safety_sensitive") is True:
+            return True
+    return False

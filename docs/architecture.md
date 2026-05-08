@@ -53,10 +53,20 @@ Replayable trace with policy findings, diffs, receipt IDs, and trace hash
 - `resolver.py`: semantic pointer resolution
 - `receipt.py`: per-step provenance records
 - `semantic_diff.py`: workflow comparison and risk notes
+- `catalog_trust.py`: catalog hash, trust-root, and HMAC signature checks
+- `config.py`: environment-backed runtime configuration
+- `hf_mount.py` and `mount_gateway.py`: real and simulated artifact gateway adapters
+- `skill_preflight.py`: skill manifest permission and trust checks
 - `service.py`: receiver orchestration boundary
 - `flight_recorder.py`: AAFR trace event recording, memory guardrail checks, hash-chain integrity, and replay report generation
+- `html_report.py`: static HTML trace replay rendering
+- `telemetry.py`: OTLP-style trace export
+- `llm_authoring.py`: optional LLM-assisted contract drafting, explanation, and review
+- `http_sidecar.py`: dependency-free HTTP preflight sidecar
 
 `PidginReceiverService` is the boundary that callers should use. Transport wrappers must not bypass it.
+
+The default CLI and flight-recorder paths use a simulated mount gateway for deterministic preflight. Real Hugging Face mounting is available through `HfMountManager`, `agent-pidgin resolve --gateway hf`, or explicit gateway injection.
 
 ## Novel Boundary
 

@@ -6,6 +6,11 @@
   "tool_contract_version": "2026-05-07",
   "correlation_id": "openclaw-email-001",
   "contract": {
+    "artifact": {
+      "kind": "repo",
+      "repo": "waynesatz/agent-pidgin-data",
+      "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
     "steps": [
       "comm.draft_external_message",
       "comm.require_recipient_verification",

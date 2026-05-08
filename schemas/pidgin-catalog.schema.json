@@ -18,7 +18,23 @@
       "type": "string"
     },
     "signature": {
-      "type": "object"
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key_id", "algorithm", "value"],
+      "properties": {
+        "key_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "algorithm": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
     },
     "concepts": {
       "type": "array",

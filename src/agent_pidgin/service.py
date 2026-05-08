@@ -94,7 +94,7 @@ class PidginReceiverService:
             },
         )
 
-        policy_findings = enforce_policy(message, policy) if policy is not None else []
+        policy_findings = enforce_policy(message, policy, catalog=self.catalog) if policy is not None else []
         if has_policy_errors(policy_findings):
             logger.warning(
                 "Message resolution blocked by policy",
