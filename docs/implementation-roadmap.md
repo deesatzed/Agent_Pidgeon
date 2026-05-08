@@ -50,6 +50,7 @@ Done:
 - signed skill manifest schema hardening and required trace hash fields
 - HTTP sidecar body-size limit and clearer client/server error split
 - shared protocol version constant in source modules
+- contract-discovery direction for finding messy workflow language that should become semantic contracts
 - docs explaining why Pidgin is not telemetry and not just another auditor agent
 - OpenClaw-class agent strategy covering local gateways, channel agents, skill marketplaces, memory, heartbeat tasks, tool actions, and enterprise clones
 - unit coverage for schema validation, catalog loading, hashing, receipts, policy, semantic diff, and CLI
@@ -61,36 +62,42 @@ Done:
    - Add negative HTTP fixtures for malformed, oversized, and missing-provenance preflights.
    - Add operator examples for `--gateway hf` and injected mount gateways.
 
-2. **AAFR next hardening**
+2. **Contract discovery / Pain Finder**
+   - Build the first deterministic Pain Finder over messy workflow instructions.
+   - Add example CSV fixtures for agent task, clinical data transformation, EHR/informatics, and SQL/SSIS instructions.
+   - Measure ambiguity, risk, audit need, exact-step need, local terminology, current friction, and automation potential.
+   - Use frontier-model or human conversion first; defer Nanowhale until contract lift is proven.
+
+3. **AAFR next hardening**
    - Add stable trace fixtures for the flight recorder demo.
    - Add event types for tool result observation and approved memory writes.
    - Add optional trace export compatible with OpenTelemetry-style spans.
    - Add signed trace roots or external append-only storage integration.
 
-3. **Showpiece hardening**
+4. **Showpiece hardening**
    - Add a CLI alias for the showpiece if repeated demo runs need a shorter command.
    - Add a compact human-readable report output beside the full JSON payload.
    - Keep the offline fixture as the deterministic test path and live OpenRouter as optional.
 
-4. **Trust hardening**
+5. **Trust hardening**
    - Add catalog version pinning in contracts.
    - Add external catalog artifact verification.
    - Add optional signed catalog and signed receipt checks.
    - Add a `pidgin-policy.schema.json` and validate policies at load time.
    - Replace any remaining extension schemas that allow arbitrary trust-state fields.
 
-5. **Authoring review loop**
+6. **Authoring review loop**
    - Let LLM-assisted authoring return explicit rejected/missing safety requirements.
    - Add deterministic guardrail checks for domain-specific required pointers.
    - Keep schema, policy, and catalog resolution as the authority.
 
-6. **Domain-boundary guard**
+7. **Domain-boundary guard**
    - Continue the plan in [docs/plans/2026-05-07-domain-boundary-guard-plan.md](plans/2026-05-07-domain-boundary-guard-plan.md).
    - Keep the supplement-coach assets as a deterministic fixture and future separate product seed after core Pidgin.
    - Use the fixture to show allowed, constrained, escalated, and blocked prompt drift.
    - Keep the boundary explicit: Pidgin constrains response authority; it does not provide medical advice.
 
-7. **Developer experience**
+8. **Developer experience**
    - Add golden JSON fixtures for the showpiece.
    - Add examples for catalog authors adding a new pointer safely.
    - Add a short operator guide for reviewing receipts.

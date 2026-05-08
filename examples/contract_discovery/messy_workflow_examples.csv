@@ -1,0 +1,7 @@
+id,source_type,raw_instruction
+agent_001,agent_prompt,"Refactor this repo but don't break the showpiece; run tests and explain anything risky."
+clinical_001,clinical_data_request,"Clean the clinical note, remove PHI, preserve negation, and return strict JSON for the model."
+ehr_001,ehr_build_request,"Can you add an alert for high-risk ED return visits and make sure it routes urgent patient messages safely?"
+ssis_001,ssis_runbook,"Run step 1, then truncate the staging table only after the row-count receipt is logged."
+support_001,support_ticket,"Send the customer update externally after approval and make sure the recipient is verified."
+casual_001,plain_note,"Rename the meeting title to project sync."

@@ -30,6 +30,16 @@ The flight-recorder layer should:
 
 The core deliverable is trustworthy resolution and provenance, not raw code execution.
 
+## Next Direction: Contract Discovery
+
+Agent Pidgin should also grow a discovery surface around the resolver: tools that identify messy workflow language that should become an explicit semantic contract.
+
+This does not change the trust path. Discovery tools may score ambiguity, risk, audit need, hidden requirements, and catalog gaps. They may suggest candidate contract types or route examples toward authoring. They must not decide policy, define pointer truth, or bypass deterministic validation.
+
+Tiny/local models such as Nanowhale may later act as contract intake compilers. Their job would be to propose candidate contracts from repetitive local workflow language. Pidgin remains the deterministic authority.
+
+See [contract-discovery-direction.md](contract-discovery-direction.md) for the saved direction and MVP validation plan.
+
 ## Product Boundary
 
 Agent Pidgin sits beside transport and tool layers.
