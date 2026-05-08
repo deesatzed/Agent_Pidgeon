@@ -12,6 +12,14 @@ PYTHONPATH=src python3 scripts/run_pain_finder.py examples/contract_discovery/me
 
 The output scores each row from 0-16 and recommends whether it should become a candidate Pidgin contract.
 
+For a broader representative corpus:
+
+```bash
+PYTHONPATH=src python3 scripts/run_pain_finder.py examples/contract_discovery/representative_workflow_corpus_80.csv
+```
+
+The 80-row corpus is synthetic but realistic: it is a seeded benchmark covering agent prompts, clinical/EHR requests, SQL/SSIS work, support replies, policy exceptions, DevOps runbooks, finance workflows, HR/legal workflows, and low-risk control instructions. Real customer or team examples should replace or extend it before claiming market evidence.
+
 ## Full Proof Suite
 
 ```bash

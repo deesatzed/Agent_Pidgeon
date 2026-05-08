@@ -109,6 +109,8 @@ This is not the final product. It is the proof-of-pain instrument.
 
 The first deterministic harness now lives in `examples/contract_discovery/` and `scripts/run_contract_discovery_experiments.py`.
 
+The repository also includes `examples/contract_discovery/representative_workflow_corpus_80.csv`, an 80-row synthetic but realistic corpus for exercising Pain Finder across multiple workflow families. It is useful for repeatable testing and demos. It is not a substitute for collected real-world examples from users or teams.
+
 It evaluates six proof questions:
 
 1. Are messy workflow instructions strong Pidgin candidates?

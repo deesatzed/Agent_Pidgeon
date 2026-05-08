@@ -46,6 +46,23 @@ class PainFinderTests(unittest.TestCase):
         self.assertGreaterEqual(result["strong_candidate_count"], 2)
         self.assertGreater(result["strong_candidate_rate"], 0.3)
 
+    def test_representative_corpus_has_enough_examples_and_candidate_clusters(self) -> None:
+        result = analyze_pain_finder_csv(ROOT / "examples/contract_discovery/representative_workflow_corpus_80.csv")
+        contract_types = {
+            row["candidate_contract_type"]
+            for row in result["results"]
+            if row["candidate_strength"] in {"good_candidate", "excellent_candidate"}
+        }
+        non_pidgin_count = sum(1 for row in result["results"] if row["candidate_strength"] == "not_a_pidgin_problem")
+
+        self.assertEqual(result["status"], "analyzed")
+        self.assertGreaterEqual(result["item_count"], 50)
+        self.assertLessEqual(result["item_count"], 200)
+        self.assertGreaterEqual(result["strong_candidate_count"], 20)
+        self.assertGreaterEqual(result["strong_candidate_rate"], 0.25)
+        self.assertGreaterEqual(len(contract_types), 4)
+        self.assertGreaterEqual(non_pidgin_count, 6)
+
 
 if __name__ == "__main__":
     unittest.main()
