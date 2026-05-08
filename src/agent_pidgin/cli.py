@@ -11,6 +11,12 @@ from agent_pidgin.catalog import SeedCatalog
 from agent_pidgin.catalog_trust import load_catalog_trust_root, signed_catalog_content, verify_catalog_trust
 from agent_pidgin.config import PidginConfig
 from agent_pidgin.demo import LocalMountGateway, run_local_demo
+from agent_pidgin.domain_guard import (
+    benchmark_prompt_boundaries,
+    evaluate_prompt_boundary,
+    load_benchmark_cases,
+    load_domain_policy,
+)
 from agent_pidgin.flight_recorder import FlightRecorder, build_trace_report
 from agent_pidgin.hash_utils import hash_catalog_content
 from agent_pidgin.html_report import build_trace_html
@@ -174,6 +180,22 @@ def build_parser() -> argparse.ArgumentParser:
     render_trace.add_argument("--otel-out", default=None)
     render_trace.add_argument("--json", action="store_true")
     render_trace.set_defaults(func=cmd_render_trace)
+
+    guard_prompt = subparsers.add_parser("guard-prompt")
+    guard_prompt.add_argument("prompt_path")
+    guard_prompt.add_argument("--domain-policy", required=True)
+    guard_prompt.add_argument("--conversation-signals", default=None)
+    guard_prompt.add_argument("--trace-out", default=None)
+    guard_prompt.add_argument("--actor", default="domain-app")
+    guard_prompt.add_argument("--summary", default="Preflight user prompt boundary.")
+    guard_prompt.add_argument("--json", action="store_true")
+    guard_prompt.set_defaults(func=cmd_guard_prompt)
+
+    benchmark_domain = subparsers.add_parser("benchmark-domain-policy")
+    benchmark_domain.add_argument("domain_policy")
+    benchmark_domain.add_argument("cases_path")
+    benchmark_domain.add_argument("--json", action="store_true")
+    benchmark_domain.set_defaults(func=cmd_benchmark_domain_policy)
 
     return parser
 
@@ -385,6 +407,36 @@ def cmd_render_trace(args: argparse.Namespace) -> dict[str, Any] | str:
     return report
 
 
+def cmd_guard_prompt(args: argparse.Namespace) -> dict[str, Any]:
+    prompt = Path(args.prompt_path).read_text(encoding="utf-8")
+    domain_policy = load_domain_policy(args.domain_policy)
+    conversation_signals = read_json(args.conversation_signals) if args.conversation_signals else []
+    if not isinstance(conversation_signals, list):
+        raise ValueError("conversation signals must be a JSON list")
+    result = evaluate_prompt_boundary(prompt, domain_policy, conversation_signals=conversation_signals)
+    if args.trace_out:
+        recorder = FlightRecorder()
+        event = recorder.record_prompt_boundary_check(
+            actor=args.actor,
+            summary=args.summary,
+            prompt=prompt,
+            domain_policy=domain_policy,
+            conversation_signals=conversation_signals,
+        )
+        trace = recorder.trace()
+        Path(args.trace_out).write_text(json.dumps(trace, indent=2), encoding="utf-8")
+        result = dict(result)
+        result["event"] = event
+        result["trace_path"] = args.trace_out
+    return result
+
+
+def cmd_benchmark_domain_policy(args: argparse.Namespace) -> dict[str, Any]:
+    domain_policy = load_domain_policy(args.domain_policy)
+    cases = load_benchmark_cases(args.cases_path)
+    return benchmark_prompt_boundaries(cases, domain_policy)
+
+
 def read_json(path: str | Path) -> Any:
     with Path(path).open(encoding="utf-8") as payload_file:
         return json.load(payload_file)
@@ -458,6 +510,8 @@ def _exit_code_for_result(result: Any) -> int:
     if isinstance(result, dict) and result.get("status") in {"error", "policy_failed"}:
         return 1
     if isinstance(result, dict) and result.get("status") == "blocked":
+        return 1
+    if isinstance(result, dict) and result.get("status") == "failed":
         return 1
     return 0
 

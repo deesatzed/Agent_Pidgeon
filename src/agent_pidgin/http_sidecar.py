@@ -7,6 +7,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 
 from agent_pidgin.cli import contract_from_preflight_payload
+from agent_pidgin.domain_guard import evaluate_prompt_boundary
 from agent_pidgin.flight_recorder import FlightRecorder, build_trace_report
 from agent_pidgin.html_report import build_trace_html
 from agent_pidgin.schema_validator import validate_pidgin_trace
@@ -31,6 +32,8 @@ class SidecarRouter:
                 return _status_for_result(_preflight_memory(body))
             if path == "/v1/preflight/contract":
                 return _status_for_result(_preflight_contract(body))
+            if path == "/v1/preflight/prompt":
+                return _status_for_result(_preflight_prompt(body))
             if path == "/v1/render-trace":
                 return HTTPStatus.OK, _render_trace(body)
         except Exception as exc:
@@ -155,6 +158,35 @@ def _preflight_contract(payload: dict[str, Any]) -> dict[str, Any]:
     return {"status": event["decision"], "event": event, "trace": recorder.trace()}
 
 
+def _preflight_prompt(payload: dict[str, Any]) -> dict[str, Any]:
+    prompt = payload.get("prompt")
+    domain_policy = payload.get("domain_policy")
+    conversation_signals = payload.get("conversation_signals", [])
+    if not isinstance(prompt, str):
+        raise ValueError("prompt preflight requires a prompt string")
+    if not isinstance(domain_policy, dict):
+        raise ValueError("prompt preflight requires a domain_policy object")
+    if not isinstance(conversation_signals, list):
+        raise ValueError("conversation_signals must be a list")
+    result = evaluate_prompt_boundary(prompt, domain_policy, conversation_signals=conversation_signals)
+    recorder = FlightRecorder(trace_id=str(payload.get("trace_id", "trace-http-sidecar-prompt")))
+    event = recorder.record_prompt_boundary_check(
+        actor=str(payload.get("actor", "domain-app")),
+        summary=str(payload.get("summary", "HTTP sidecar prompt boundary preflight.")),
+        prompt=prompt,
+        domain_policy=domain_policy,
+        conversation_signals=conversation_signals,
+    )
+    return {
+        "status": result["status"],
+        "autonomy_tier": result["autonomy_tier"],
+        "required_response_controls": result["required_response_controls"],
+        "domain_guard": result,
+        "event": event,
+        "trace": recorder.trace(),
+    }
+
+
 def _render_trace(payload: dict[str, Any]) -> dict[str, Any]:
     trace = payload.get("trace")
     if not isinstance(trace, dict):
@@ -172,7 +204,7 @@ def _render_trace(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def _status_for_result(result: dict[str, Any]) -> tuple[int, dict[str, Any]]:
-    if result.get("status") in {"blocked", "policy_failed"}:
+    if result.get("status") in {"blocked", "escalate", "policy_failed"}:
         return HTTPStatus.CONFLICT, result
     if result.get("status") == "error":
         return HTTPStatus.BAD_REQUEST, result

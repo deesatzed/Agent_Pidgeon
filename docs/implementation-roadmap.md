@@ -42,6 +42,8 @@ Done:
 - deterministic detection of unapproved memory guardrail weakening
 - high-risk semantic drift blocking for proposed contract events
 - deterministic supplement-coach domain-boundary benchmark with measurable status accuracy, tier accuracy, and unsafe-prompt catch rate
+- reusable domain-boundary CLI commands for prompt preflight and policy benchmarking
+- HTTP sidecar prompt preflight endpoint and AAFR prompt-boundary trace event
 - docs explaining why Pidgin is not telemetry and not just another auditor agent
 - OpenClaw-class agent strategy covering local gateways, channel agents, skill marketplaces, memory, heartbeat tasks, tool actions, and enterprise clones
 - unit coverage for schema validation, catalog loading, hashing, receipts, policy, semantic diff, and CLI
@@ -77,9 +79,9 @@ Done:
    - Keep schema, policy, and catalog resolution as the authority.
 
 6. **Domain-boundary guard**
-   - Implement the plan in [plans/2026-05-07-domain-boundary-guard-plan.md](plans/2026-05-07-domain-boundary-guard-plan.md).
-   - Extend the deterministic prompt-boundary preflight from the current supplement-coach benchmark into CLI and sidecar surfaces.
-   - Build the supplement coach showpiece: allowed, constrained, escalated, and blocked prompt drift.
+   - Implement the plan in [docs/plans/2026-05-07-domain-boundary-guard-plan.md](plans/2026-05-07-domain-boundary-guard-plan.md).
+   - Keep the supplement-coach assets as a deterministic fixture and future separate product seed after core Pidgin.
+   - Use the fixture to show allowed, constrained, escalated, and blocked prompt drift.
    - Keep the boundary explicit: Pidgin constrains response authority; it does not provide medical advice.
 
 7. **Developer experience**

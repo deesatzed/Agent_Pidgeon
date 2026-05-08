@@ -218,6 +218,24 @@ Run the supplement-coach domain-boundary benchmark:
 PYTHONPATH=src python3 scripts/check_supplement_guard_benchmark.py
 ```
 
+Run a reusable domain-boundary policy benchmark:
+
+```bash
+agent-pidgin benchmark-domain-policy \
+  examples/supplement_coach/domain_policy.json \
+  examples/supplement_coach/benchmark_cases.jsonl \
+  --json
+```
+
+Preflight one prompt:
+
+```bash
+agent-pidgin guard-prompt /tmp/prompt.txt \
+  --domain-policy examples/supplement_coach/domain_policy.json \
+  --trace-out /tmp/prompt-boundary-trace.json \
+  --json
+```
+
 ## Run the showpiece demo
 
 The showpiece demonstrates the intended product shape end to end: plain-language authoring, schema validation, policy findings, trusted catalog resolution, semantic diff risk review, and receipts.

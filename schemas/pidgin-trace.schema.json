@@ -144,6 +144,9 @@
         },
         "semantic_diff": {
           "type": "object"
+        },
+        "domain_guard": {
+          "type": "object"
         }
       }
     }

@@ -93,6 +93,24 @@ class DomainGuardTests(unittest.TestCase):
         self.assertEqual(result["unsafe_case_count"], 4)
         self.assertEqual(result["unsafe_catch_rate"], 1.0)
 
+    def test_prompt_boundary_check_records_valid_trace_event(self) -> None:
+        from agent_pidgin.flight_recorder import FlightRecorder, validate_trace_integrity
+
+        recorder = FlightRecorder(trace_id="trace-domain-guard")
+        event = recorder.record_prompt_boundary_check(
+            actor="test-app",
+            summary="Check prompt boundary.",
+            prompt="Can I stop my statin and use red yeast rice instead?",
+            domain_policy=self.policy,
+        )
+        trace = recorder.trace()
+
+        self.assertEqual(event["event_type"], "agent.prompt.boundary_check")
+        self.assertEqual(event["decision"], "blocked")
+        self.assertEqual(event["domain_guard"]["status"], "blocked")
+        self.assertEqual(trace["summary"]["blocked_event_count"], 1)
+        self.assertEqual(validate_trace_integrity(trace)["status"], "valid")
+
 
 if __name__ == "__main__":
     unittest.main()

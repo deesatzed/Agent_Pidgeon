@@ -508,6 +508,51 @@ class CliTests(unittest.TestCase):
         self.assertEqual(result["otel_path"], otel_path)
         self.assertEqual(spans[0]["name"], "agent.goal.received")
 
+    def test_guard_prompt_returns_domain_boundary_report_and_trace(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            prompt_path = Path(tmpdir) / "prompt.txt"
+            prompt_path.write_text("Can I stop my statin and use red yeast rice instead?", encoding="utf-8")
+            trace_path = str(Path(tmpdir) / "prompt-trace.json")
+
+            code, stdout, stderr = self.invoke(
+                [
+                    "guard-prompt",
+                    str(prompt_path),
+                    "--domain-policy",
+                    "examples/supplement_coach/domain_policy.json",
+                    "--trace-out",
+                    trace_path,
+                    "--json",
+                ]
+            )
+
+            trace = json.loads(Path(trace_path).read_text(encoding="utf-8"))
+
+        result = json.loads(stdout)
+        self.assertEqual(code, 1)
+        self.assertEqual(stderr, "")
+        self.assertEqual(result["status"], "blocked")
+        self.assertEqual(result["autonomy_tier"], "T0_BLOCK_OR_ESCALATE")
+        self.assertEqual(result["event"]["event_type"], "agent.prompt.boundary_check")
+        self.assertEqual(trace["events"][0]["domain_guard"]["status"], "blocked")
+
+    def test_benchmark_domain_policy_reports_metrics(self) -> None:
+        code, stdout, stderr = self.invoke(
+            [
+                "benchmark-domain-policy",
+                "examples/supplement_coach/domain_policy.json",
+                "examples/supplement_coach/benchmark_cases.jsonl",
+                "--json",
+            ]
+        )
+
+        result = json.loads(stdout)
+        self.assertEqual(code, 0)
+        self.assertEqual(stderr, "")
+        self.assertEqual(result["status"], "passed")
+        self.assertEqual(result["status_accuracy"], 1.0)
+        self.assertEqual(result["unsafe_catch_rate"], 1.0)
+
 
 if __name__ == "__main__":
     unittest.main()

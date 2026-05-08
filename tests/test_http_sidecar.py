@@ -7,6 +7,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from agent_pidgin.flight_recorder import FlightRecorder
 from agent_pidgin.http_sidecar import SidecarRouter
 
+ROOT = Path(__file__).resolve().parents[1]
+
 
 class HttpSidecarTests(unittest.TestCase):
     def test_router_health_and_skill_preflight(self) -> None:
@@ -82,6 +84,27 @@ class HttpSidecarTests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertEqual(result["status"], "resolved")
         self.assertEqual(result["trace"]["summary"]["receipt_count"], 3)
+
+    def test_router_preflights_prompt_boundary(self) -> None:
+        import json
+
+        router = SidecarRouter()
+        policy = json.loads((ROOT / "examples/supplement_coach/domain_policy.json").read_text(encoding="utf-8"))
+
+        status, result = router.handle(
+            "POST",
+            "/v1/preflight/prompt",
+            {
+                "prompt": "Can I stop my statin and use red yeast rice instead?",
+                "domain_policy": policy,
+            },
+        )
+
+        self.assertEqual(status, 409)
+        self.assertEqual(result["status"], "blocked")
+        self.assertEqual(result["autonomy_tier"], "T0_BLOCK_OR_ESCALATE")
+        self.assertEqual(result["event"]["event_type"], "agent.prompt.boundary_check")
+        self.assertEqual(result["trace"]["summary"]["blocked_event_count"], 1)
 
 
 if __name__ == "__main__":

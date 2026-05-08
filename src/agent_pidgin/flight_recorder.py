@@ -8,6 +8,7 @@ from uuid import uuid4
 from agent_pidgin.catalog import SeedCatalog
 from agent_pidgin.config import PidginConfig
 from agent_pidgin.demo import LocalMountGateway
+from agent_pidgin.domain_guard import evaluate_prompt_boundary
 from agent_pidgin.hash_utils import sha256_digest
 from agent_pidgin.policy import PidginPolicy, load_policy
 from agent_pidgin.schema_validator import validate_pidgin_message, validate_pidgin_trace
@@ -150,6 +151,47 @@ class FlightRecorder:
             "skill_id": result["skill_id"],
             "policy_findings": result["findings"],
             "receipt_ids": [],
+        }
+        return self._append_event(event)
+
+    def record_prompt_boundary_check(
+        self,
+        actor: str,
+        summary: str,
+        prompt: str,
+        domain_policy: dict[str, Any],
+        conversation_signals: list[dict[str, Any]] | None = None,
+        parent_event_id: str | None = None,
+    ) -> dict[str, Any]:
+        result = evaluate_prompt_boundary(
+            prompt,
+            domain_policy,
+            conversation_signals=conversation_signals,
+        )
+        decision = "blocked" if result["status"] in {"blocked", "escalate"} else "resolved"
+        payload = {
+            "domain": result["domain"],
+            "topic": result["topic"],
+            "prompt_hash": result["prompt_hash"],
+            "policy_hash": result["policy_hash"],
+            "status": result["status"],
+            "autonomy_tier": result["autonomy_tier"],
+            "required_response_controls": result["required_response_controls"],
+            "conversation_signal_hashes": [sha256_digest(signal) for signal in conversation_signals or []],
+        }
+        event = {
+            "event_id": f"evt-{len(self.events) + 1:04d}",
+            "parent_event_id": parent_event_id,
+            "event_type": "agent.prompt.boundary_check",
+            "actor": actor,
+            "timestamp": utc_now(),
+            "summary": summary,
+            "decision": decision,
+            "payload": payload,
+            "payload_hash": sha256_digest(payload),
+            "policy_findings": result["findings"],
+            "receipt_ids": [],
+            "domain_guard": result,
         }
         return self._append_event(event)
 
