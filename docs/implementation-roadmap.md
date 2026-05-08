@@ -51,6 +51,7 @@ Done:
 - HTTP sidecar body-size limit and clearer client/server error split
 - shared protocol version constant in source modules
 - contract-discovery direction for finding messy workflow language that should become semantic contracts
+- deterministic Pain Finder and contract-discovery experiment harness with corpus, lift, agent-comparison, catalog-gap, human-reaction, and tiny-model-readiness fixtures
 - docs explaining why Pidgin is not telemetry and not just another auditor agent
 - OpenClaw-class agent strategy covering local gateways, channel agents, skill marketplaces, memory, heartbeat tasks, tool actions, and enterprise clones
 - unit coverage for schema validation, catalog loading, hashing, receipts, policy, semantic diff, and CLI
@@ -63,10 +64,10 @@ Done:
    - Add operator examples for `--gateway hf` and injected mount gateways.
 
 2. **Contract discovery / Pain Finder**
-   - Build the first deterministic Pain Finder over messy workflow instructions.
-   - Add example CSV fixtures for agent task, clinical data transformation, EHR/informatics, and SQL/SSIS instructions.
-   - Measure ambiguity, risk, audit need, exact-step need, local terminology, current friction, and automation potential.
-   - Use frontier-model or human conversion first; defer Nanowhale until contract lift is proven.
+   - Expand the fixture corpus from 6 examples to 50-200 real examples from tickets, prompts, runbooks, handoffs, and policy exceptions.
+   - Manually convert the strongest 10-20 examples into candidate contracts and score the contract-lift rubric with human reviewers.
+   - Compare raw-instruction agent output against contract-guided output on the same tasks and record missed requirements, unsafe omissions, and audit artifacts.
+   - Use frontier-model or human conversion first; defer Nanowhale until repeated contract lift is proven on real examples.
 
 3. **AAFR next hardening**
    - Add stable trace fixtures for the flight recorder demo.

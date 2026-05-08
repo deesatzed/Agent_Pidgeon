@@ -105,6 +105,21 @@ JSON report with score, reasons, hidden requirements, and recommended next step
 
 This is not the final product. It is the proof-of-pain instrument.
 
+## Current Experiment Harness
+
+The first deterministic harness now lives in `examples/contract_discovery/` and `scripts/run_contract_discovery_experiments.py`.
+
+It evaluates six proof questions:
+
+1. Are messy workflow instructions strong Pidgin candidates?
+2. Does converting them to contract shape expose hidden obligations?
+3. Does a contract-guided agent miss fewer requirements than a raw-instruction agent?
+4. Do strong examples reveal missing or reusable catalog semantics?
+5. Do humans find the contract form clarifying rather than bureaucratic?
+6. Are any domains ready for a tiny local intake compiler trial?
+
+The harness is fixture-backed and deterministic. It does not claim market proof. It gives the project a repeatable measurement target before investing in larger corpora, model-assisted contract drafting, or Nanowhale-style local compilers.
+
 ## Decision Rule
 
 For any workflow, ask:

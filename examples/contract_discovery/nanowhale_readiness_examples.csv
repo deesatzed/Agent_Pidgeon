@@ -1,0 +1,7 @@
+domain,sensitive,high_volume,latency_sensitive,repetitive_language,stable_schema,human_review_present
+clinical_text_transform,true,true,true,true,true,true
+ssis_runbook_contracts,true,true,false,true,true,true
+external_message_approval,true,true,true,true,true,true
+agent_task_contracts,false,true,true,true,false,true
+policy_exception_triage,true,false,false,true,true,true
+casual_notes,false,false,false,false,false,false

@@ -1,0 +1,7 @@
+id,raw_missed_requirements,contract_missed_requirements,raw_unsafe_omissions,contract_unsafe_omissions,raw_audit_artifacts,contract_audit_artifacts
+agent_001,3,1,1,0,1,4
+clinical_001,4,1,2,0,1,5
+ehr_001,3,2,2,1,0,3
+ssis_001,3,0,1,0,1,4
+support_001,3,1,2,0,1,4
+casual_001,0,0,0,0,0,0

@@ -1,0 +1,7 @@
+id,hidden_assumptions_exposed,ambiguity_reduced,validation_possible,safety_constraints_clarified,receipts_defined,reproducibility_improved,catalog_gap_revealed
+agent_001,true,true,true,true,true,true,false
+clinical_001,true,true,true,true,true,true,true
+ehr_001,true,true,false,true,true,false,true
+ssis_001,true,true,true,true,true,true,false
+support_001,true,true,true,true,true,false,true
+casual_001,false,false,false,false,false,false,false

@@ -1,0 +1,7 @@
+id,revealed_unstated_assumption,felt_clarifying,felt_bureaucratic
+agent_001,true,true,false
+clinical_001,true,true,false
+ehr_001,true,true,true
+ssis_001,true,true,false
+support_001,true,true,false
+casual_001,false,false,true
