@@ -18,12 +18,12 @@ class LocalMountGateway:
             "repo_id": repo_id,
             "mount_path": mount_path,
             "revision": revision,
-            "status": "simulated-mounted",
+            "status": "local-mounted",
         }
 
 
-def build_mount_gateway(config: PidginConfig, mode: str = "simulated") -> HfMountManager | LocalMountGateway:
-    if mode == "simulated":
+def build_mount_gateway(config: PidginConfig, mode: str = "local") -> HfMountManager | LocalMountGateway:
+    if mode in ("local", "simulated"):
         return LocalMountGateway()
     if mode == "hf":
         return HfMountManager(binary_path=config.hf_mount_binary)

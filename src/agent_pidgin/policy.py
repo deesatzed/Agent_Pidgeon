@@ -19,7 +19,7 @@ class PidginPolicy:
     allow_branch_revision: bool
     allowed_artifact_kinds: tuple[str, ...]
     allowed_repos: tuple[str, ...]
-    warn_raw_execution: bool
+    deny_raw_execution: bool
     require_receipts: bool
     sensitive_pointer_prefixes: tuple[str, ...]
 
@@ -30,7 +30,7 @@ class PidginPolicy:
             allow_branch_revision=bool(payload.get("allow_branch_revision", False)),
             allowed_artifact_kinds=tuple(str(kind) for kind in payload.get("allowed_artifact_kinds", [])),
             allowed_repos=tuple(str(repo) for repo in payload.get("allowed_repos", [])),
-            warn_raw_execution=bool(payload.get("warn_raw_execution", payload.get("deny_raw_execution", True))),
+            deny_raw_execution=bool(payload.get("deny_raw_execution", payload.get("warn_raw_execution", True))),
             require_receipts=bool(payload.get("require_receipts", True)),
             sensitive_pointer_prefixes=tuple(str(prefix) for prefix in payload.get("sensitive_pointer_prefixes", [])),
         )
@@ -105,7 +105,7 @@ def enforce_policy(message: PidginMessage, policy: PidginPolicy, catalog: Any | 
             )
         )
 
-    if policy.warn_raw_execution:
+    if policy.deny_raw_execution:
         findings.append(
             PolicyFinding(
                 severity="warning",

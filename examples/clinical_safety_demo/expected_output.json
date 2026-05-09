@@ -5,7 +5,7 @@
     "kind": "repo",
     "repo_id": "waynesatz/agent-pidgin-data",
     "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "status": "simulated-mounted"
+    "status": "local-mounted"
   },
   "resolution": {
     "target_language": "python",

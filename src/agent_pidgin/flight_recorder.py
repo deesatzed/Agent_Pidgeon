@@ -29,7 +29,7 @@ class FlightRecorder:
     policy: PidginPolicy = field(default_factory=load_policy)
     config: PidginConfig = field(default_factory=PidginConfig.from_env)
     mount_gateway: Any | None = None
-    mount_gateway_mode: str = "simulated"
+    mount_gateway_mode: str = "local"
     events: list[dict[str, Any]] = field(default_factory=list)
     _cached_service: PidginReceiverService | None = field(default=None, init=False, repr=False)
 
